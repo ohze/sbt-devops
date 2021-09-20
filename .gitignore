@@ -1,0 +1,11 @@
+.bsp
+.idea
+.bloop
+.vscode
+.metals
+metals.sbt
+/target/
+/*/target/
+**/project/target/
+**/sbt-test/**/target
+**/sbt-test/*/*/project/build.properties
