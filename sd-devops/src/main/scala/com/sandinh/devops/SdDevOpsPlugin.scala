@@ -10,6 +10,7 @@ import sbt.plugins.JvmPlugin
 import sbtdynver.DynVerPlugin
 import sbtdynver.DynVerPlugin.autoImport.dynverSonatypeSnapshots
 
+import java.nio.file.Files
 import scala.util.Try
 import sys.env
 
@@ -45,11 +46,20 @@ object SdDevOpsPlugin extends AutoPlugin {
 
   val scalafmtVersion = "3.0.4"
 
+  private def isSdQAStep(line: String) =
+    line.trim.startsWith("- run: sbt ") && line.endsWith(" sdQA")
+
   def validateGithubCI(baseDir: File): Unit = {
     for {
       name <- Seq("test.yml", "release.yml")
       f = baseDir / ".github" / "workflows" / name
     } orBoom(f.isFile, s"$f: File not found!")
+
+    val testYml = baseDir / ".github" / "workflows" / "test.yml"
+    orBoom(
+      IO.readLines(testYml).exists(isSdQAStep),
+      s"$testYml must define step:\n- run: sbt <optional params> sdQA"
+    )
   }
 
   def validateScalafmtConf(baseDir: File): Unit = {
