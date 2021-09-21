@@ -1,31 +1,42 @@
 # sd-devops
+[![CI](https://github.com/ohze/sd-devops/actions/workflows/test.yml/badge.svg)](https://github.com/ohze/sd-devops/actions/workflows/test.yml)
+
 Sân Đình devops automator for scala projects
+
+This is a sbt AutoPlugin that do 3 things:
+
+1. `sdSetup` task:
++ Setup scalafmt
++ Setup Github Action CI to test & do some QA (Quality Assurance) check by running `sbt test sdQA`
++ Setup CI to auto release when you push code to github
+  - Release to maven central (sonatype oss) if your project is open source
+  - Release to bennuoc if your project is private
+  - Release to `releases` maven if you push a git tag
+  - Release to `snapshots` maven otherwise
++ Setup other things such as add a badge to README.md,..
+
+2. `sdQA` task 
++ Validate that you have setup CI, scalafmt,.. and that your code is formatted
+
+3. Auto add some sbt settings such as
++ `version`: Auto get from git
++ `resolvers += bennuoc`
++ `organization := "com.sandinh"`
++ `publishMavenStyle := true`
++ `scmInfo`, `homepage`, `publishTo`, `publishMavenStyle`, `credentials`,..
+   See source code for more detail.
++ Of course, you can override those settings in your project
 
 ## Install
 Add to `project/plugins.sbt`
++ For private projects that will be published to repo.bennuoc.com
 ```sbt
-// for private projects that will be published to repo.bennuoc.com
 addSbtPlugin("com.sandinh" % "sd-devops" % "<version>")
-// for oss projects that will be publish to sonatype oss
+```
++ For oss projects that will be publish to sonatype oss
+```sbt
 addSbtPlugin("com.sandinh" % "sd-devops-oss" % "<version>")
 ```
 
-## What it does?
-Both `sd-devops` and `sd-devops-oss` defines `SdDevOpsPlugin` sbt AutoPlugin that:
-+ Auto add `sbt-dynver`, `sbt-git`, `sbt-scalafmt` plugins
-+ `sd-devops-oss` also add `sbt-ci-release` which transitively add `sbt-sonatype`, `sbt-pgp` plugins
-+ Auto define the following settings:
-  - `organization := "com.sandinh"`
-  - `scmInfo := gitHubScmInfo`
-  - `homepage := s"https://github.com/$user/$repo"`
-  - `publishMavenStyle := true`
-  - `version`: handled by sbt-dynver
-  - `publishTo`: = bennuoc for `sd-devops` or handled by sbt-ci-release for `sd-devops-os`
-  - `credentials`: handled by `sd-devops` or by sbt-sonatype for `sd-devops-os`
-+ Define `sdQA` sbt task: SanDinh QA (Quality Assurance), which verify that:
-  1. `.scalafmt.conf` file exists
-  2. `.scalafmt.conf` have `version = <The version defined in sd-devops>`
-  3. `scalafmtCheckAll` pass
-  4. `.github/workflows/{test.yml, release.yml}` files exists
-  5. `test.yml` must define step: `- run: sbt <optional params> sdQA`.
-      Here, `<optional params>` maybe `++$${{ matrix.scala }}`
+## Usage
+TODO
