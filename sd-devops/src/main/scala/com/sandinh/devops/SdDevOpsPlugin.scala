@@ -11,6 +11,7 @@ import sbt.plugins.JvmPlugin
 import sbtdynver.DynVerPlugin
 
 import java.nio.file.Files
+import scala.util.matching.Regex
 
 object SdDevOpsPlugin extends AutoPlugin {
   override def trigger = allRequirements
@@ -49,9 +50,8 @@ object SdDevOpsPlugin extends AutoPlugin {
   override lazy val projectSettings: Seq[Setting[_]] = Seq(
   ) ++ Impl.projectSettings
 
-  private val baseUrl = "https://raw.githubusercontent.com/ohze/sd-devops/main"
-
   lazy val sdSetupTask: Initialize[Task[Unit]] = Def.task {
+    val baseUrl = "https://raw.githubusercontent.com/ohze/sd-devops/main"
     val baseDir = (ThisBuild / baseDirectory).value
     val log = streams.value.log
     for {
@@ -69,19 +69,21 @@ object SdDevOpsPlugin extends AutoPlugin {
 
     val readme = baseDir / "README.md"
     def badge(user: String, repo: String) = {
-        val url = s"https://github.com/$user/$repo/actions/workflows/test.yml"
-        s"[![CI]($url/badge.svg)]($url)"
+      val url = s"https://github.com/$user/$repo/actions/workflows/test.yml"
+      s"[![CI]($url/badge.svg)]($url)"
     }
-    if (! readme.exists()) {
+    if (!readme.exists()) {
       Utils.gitHubInfo match {
         case None => IO.write(readme, "# <repo>\n<badge>\n\nTODO\n")
         case Some((user, repo)) =>
-          IO.write(readme,
+          IO.write(
+            readme,
             s"""# $repo
-               |${ badge(user, repo) }
+               |${badge(user, repo)}
                |
                |TODO
-               |""".stripMargin)
+               |""".stripMargin
+          )
       }
     } else {
       val hasBadge = Files
@@ -90,7 +92,9 @@ object SdDevOpsPlugin extends AutoPlugin {
       if (!hasBadge) {
         Utils.gitHubInfo match {
           case None =>
-            log.warn("Can't get github url from `git ls-remote --get-url origin`")
+            log.warn(
+              "Can't get github url from `git ls-remote --get-url origin`"
+            )
           case Some((user, repo)) =>
             val (head, tail) = IO
               .readLines(readme)
@@ -108,13 +112,37 @@ object SdDevOpsPlugin extends AutoPlugin {
     val baseDir = (ThisBuild / baseDirectory).value
     validateScalafmtConf(baseDir)
     validateGithubCI(baseDir)
+    validatePluginsSbt(baseDir)
   }
 
-  private val sbtStepPrefix = "- run: sbt "
+  private def validatePluginsSbt(baseDir: File): Unit = {
+    val f = baseDir / "project/plugins.sbt"
+    val lines = IO.readLines(f)
+
+    def has(plugin: String) = {
+      val s = Regex.quote(plugin)
+      val r = s""".+%\\s*"$s".*"""
+      lines.exists { line =>
+        !line.stripLeading.startsWith("//") && line.matches(r)
+      }
+    }
+    def check(plugin: String): Unit =
+      orBoom(!has(plugin), s"You should remove $plugin from $f")
+
+    (has("sd-devops-oss"), has("sd-devops")) match {
+      case (false, false) => // do nothing
+      case (isOss, _) =>
+        Seq("sbt-dynver", "sbt-git", "sbt-scalafmt").foreach(check)
+        if (isOss)
+          Seq("sbt-ci-release", "sbt-sonatype", "sbt-pgp").foreach(check)
+    }
+  }
+
   private def isSdQAStep(line: String): Boolean = {
+    val prefix = "- run: sbt "
     val s = line.trim
-    if (!s.startsWith(sbtStepPrefix)) return false
-    val words = s.substring(sbtStepPrefix.length).split("""[\s"']""")
+    if (!s.startsWith(prefix)) return false
+    val words = s.substring(prefix.length).split("""[\s"']""")
     words.contains("sdQA")
   }
 
