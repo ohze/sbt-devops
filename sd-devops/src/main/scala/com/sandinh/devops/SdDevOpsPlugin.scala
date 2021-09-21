@@ -95,16 +95,9 @@ object SdDevOpsPlugin extends AutoPlugin {
     }
     if (!readme.exists()) {
       Utils.gitHubInfo match {
-        case None => IO.write(readme, "# <repo>\n<badge>\n\nTODO\n")
+        case None => IO.write(readme, "# <repo>\n\n<badge>\n\nTODO\n")
         case Some((user, repo)) =>
-          IO.write(
-            readme,
-            s"""# $repo
-               |${badge(user, repo)}
-               |
-               |TODO
-               |""".stripMargin
-          )
+          IO.write(readme, s"# $repo\n\n${badge(user, repo)}\n\nTODO\n")
       }
     } else {
       val hasBadge = Files
@@ -120,7 +113,7 @@ object SdDevOpsPlugin extends AutoPlugin {
             val (head, tail) = IO
               .readLines(readme)
               .span(l => l.trim.isEmpty || l.trim.startsWith("#"))
-            val insert = badge(user, repo) :: "" :: Nil
+            val insert = "" :: badge(user, repo) :: "" :: Nil
             IO.writeLines(readme, head ++ insert ++ tail)
         }
       }
