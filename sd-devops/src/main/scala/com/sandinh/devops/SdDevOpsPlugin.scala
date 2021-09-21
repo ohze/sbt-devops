@@ -32,31 +32,41 @@ object SdDevOpsPlugin extends AutoPlugin {
 
   override lazy val projectSettings: Seq[Setting[_]] = Seq(
     sdQA := {
-      validateScalafmtConf.value
+      validates.value
       scalafmtCheckAll.value
     },
   )
 
-  val scalafmtVersion = "3.0.5"
-
-  val validateScalafmtConf: Initialize[Task[Unit]] = Def.task {
-    validateScalafmtConf((ThisBuild / baseDirectory).value / ".scalafmt.conf")
+  val validates: Initialize[Task[Unit]] = Def.task {
+    val baseDir = (ThisBuild / baseDirectory).value
+    validateScalafmtConf(baseDir)
+    validateGithubCI(baseDir)
   }
 
-  def validateScalafmtConf(f: File): Unit = {
-    orBoom(f.isFile, ".scalafmt.conf: File not found!")
+  val scalafmtVersion = "3.0.4"
+
+  def validateGithubCI(baseDir: File): Unit = {
+    for {
+      name <- Seq("test.yml", "release.yml")
+      f = baseDir / ".github" / "workflows" / name
+    } orBoom(f.isFile, s"$f: File not found!")
+  }
+
+  def validateScalafmtConf(baseDir: File): Unit = {
+    val f = baseDir / ".scalafmt.conf"
+    orBoom(f.isFile, s"$f: File not found!")
 
     val c = ConfigFactory.parseFile(f)
-    orBoom(c.hasPath("version"), ".scalafmt.conf: File not found!")
+    orBoom(c.hasPath("version"), s"$f: `version` config not found!")
 
     orBoom(
       c.getString("version") == scalafmtVersion,
-      s".scalafmt.conf: You must update `version` to $scalafmtVersion"
+      s"$f: You must update `version` to $scalafmtVersion"
     )
   }
 
   def orBoom(check: => Boolean, msg: String): Unit = {
-    if (! check) throw new MessageOnlyException(".scalafmt.conf: File not found!")
+    if (! check) throw new MessageOnlyException(msg)
   }
 
   def releaseTag: String = env.getOrElse("GITHUB_REF", "<unknown>")
