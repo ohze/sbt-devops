@@ -10,7 +10,7 @@ import sbt.plugins.JvmPlugin
 import sbtdynver.DynVerPlugin
 import sbtdynver.DynVerPlugin.autoImport.dynverSonatypeSnapshots
 
-import scala.util.{Failure, Success, Try}
+import scala.util.Try
 import sys.env
 
 object SdDevOpsPlugin extends AutoPlugin {
@@ -66,7 +66,7 @@ object SdDevOpsPlugin extends AutoPlugin {
   }
 
   def orBoom(check: => Boolean, msg: String): Unit = {
-    if (! check) throw new MessageOnlyException(msg)
+    if (!check) throw new MessageOnlyException(msg)
   }
 
   def releaseTag: String = env.getOrElse("GITHUB_REF", "<unknown>")
@@ -86,8 +86,8 @@ object SdDevOpsPlugin extends AutoPlugin {
     import scala.sys.process._
     val identifier = """([^\/]+?)"""
     val GitHubHttps = s"https://github.com/$identifier/$identifier(?:\\.git)?".r
-    val GitHubGit   = s"git://github.com:$identifier/$identifier(?:\\.git)?".r
-    val GitHubSsh   = s"git@github.com:$identifier/$identifier(?:\\.git)?".r
+    val GitHubGit = s"git://github.com:$identifier/$identifier(?:\\.git)?".r
+    val GitHubSsh = s"git@github.com:$identifier/$identifier(?:\\.git)?".r
     Try {
       "git ls-remote --get-url origin".!!.trim()
     }.toOption.flatMap {
