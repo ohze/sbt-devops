@@ -5,7 +5,7 @@ import sbt._
 import sbt.Keys._
 import sbtdynver.DynVerPlugin.autoImport.dynverSonatypeSnapshots
 
-import scala.util.Try
+import Utils.gitHubScmInfo
 
 object Impl {
   val nexusRealm = "Sonatype Nexus Repository Manager"
@@ -37,27 +37,4 @@ object Impl {
       Some(tpe at s"$bennuocMaven-$tpe")
     },
   )
-
-  def gitHubScmInfo(user: String, repo: String) =
-    ScmInfo(
-      url(s"https://github.com/$user/$repo"),
-      s"scm:git:https://github.com/$user/$repo.git",
-      Some(s"scm:git:git@github.com:$user/$repo.git")
-    )
-
-  def gitHubScmInfo: Option[ScmInfo] = {
-    import scala.sys.process._
-    val identifier = """([^\/]+?)"""
-    val GitHubHttps = s"https://github.com/$identifier/$identifier(?:\\.git)?".r
-    val GitHubGit = s"git://github.com:$identifier/$identifier(?:\\.git)?".r
-    val GitHubSsh = s"git@github.com:$identifier/$identifier(?:\\.git)?".r
-    Try {
-      "git ls-remote --get-url origin".!!.trim()
-    }.toOption.flatMap {
-      case GitHubHttps(user, repo) => Some(gitHubScmInfo(user, repo))
-      case GitHubGit(user, repo)   => Some(gitHubScmInfo(user, repo))
-      case GitHubSsh(user, repo)   => Some(gitHubScmInfo(user, repo))
-      case _                       => None
-    }
-  }
 }

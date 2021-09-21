@@ -6,8 +6,11 @@ import org.scalafmt.sbt.ScalafmtPlugin.autoImport.scalafmtCheckAll
 import sbt._
 import sbt.Keys._
 import sbt.Def.Initialize
+import sbt.io.Using
 import sbt.plugins.JvmPlugin
 import sbtdynver.DynVerPlugin
+
+import java.nio.file.Files
 
 object SdDevOpsPlugin extends AutoPlugin {
   override def trigger = allRequirements
@@ -17,6 +20,7 @@ object SdDevOpsPlugin extends AutoPlugin {
 
   object autoImport {
     val sdQA = taskKey[Unit]("SanDinh QA (Quality Assurance)")
+    val sdSetup = taskKey[Unit]("Setup devops stuff")
   }
   import autoImport._
 
@@ -39,10 +43,66 @@ object SdDevOpsPlugin extends AutoPlugin {
       val _ = validates.value
       val __ = scalafmtCheckAll.all(ScopeFilter(inAnyProject)).value
     },
+    sdSetup := sdSetupTask.value,
   ) ++ Impl.globalSettings
 
   override lazy val projectSettings: Seq[Setting[_]] = Seq(
   ) ++ Impl.projectSettings
+
+  private val baseUrl = "https://raw.githubusercontent.com/ohze/sd-devops/main"
+
+  lazy val sdSetupTask: Initialize[Task[Unit]] = Def.task {
+    val baseDir = (ThisBuild / baseDirectory).value
+    val log = streams.value.log
+    for {
+      f <- Seq(
+        ".scalafmt.conf",
+        ".github/workflows/test.yml",
+        ".github/workflows/release.yml"
+      )
+      to = baseDir / f
+      if (!to.exists())
+    } {
+      log.info(s"download $f")
+      Using.urlInputStream(new URL(s"$baseUrl/$f"))(IO.transfer(_, to))
+    }
+
+    val readme = baseDir / "README.md"
+    def badge(user: String, repo: String) = {
+        val url = s"https://github.com/$user/$repo/actions/workflows/test.yml"
+        s"[![CI]($url/badge.svg)]($url)"
+    }
+    if (! readme.exists()) {
+      Utils.gitHubInfo match {
+        case None => IO.write(readme, "# <repo>\n<badge>\n\nTODO\n")
+        case Some((user, repo)) =>
+          IO.write(readme,
+            s"""# $repo
+               |${ badge(user, repo) }
+               |
+               |TODO
+               |""".stripMargin)
+      }
+    } else {
+      val hasBadge = Files
+        .lines(readme.toPath)
+        .anyMatch(_.contains(".yml/badge.svg)](https://github.com/"))
+      if (!hasBadge) {
+        Utils.gitHubInfo match {
+          case None =>
+            log.warn("Can't get github url from `git ls-remote --get-url origin`")
+          case Some((user, repo)) =>
+            val (head, tail) = IO
+              .readLines(readme)
+              .span(l => l.trim.isEmpty || l.trim.startsWith("#"))
+            val insert = badge(user, repo) :: "" :: Nil
+            IO.writeLines(readme, head ++ insert ++ tail)
+        }
+      }
+    }
+
+    log.info("Done")
+  }
 
   lazy val validates: Initialize[Task[Unit]] = Def.task {
     val baseDir = (ThisBuild / baseDirectory).value
