@@ -50,8 +50,13 @@ object SdDevOpsPlugin extends AutoPlugin {
     validateGithubCI(baseDir)
   }
 
-  private def isSdQAStep(line: String) =
-    line.trim.startsWith("- run: sbt ") && line.endsWith(" sdQA")
+  private val sbtStepPrefix = "- run: sbt "
+  private def isSdQAStep(line: String): Boolean = {
+    val s = line.trim
+    if (!s.startsWith(sbtStepPrefix)) return false
+    val words = s.substring(sbtStepPrefix.length).split("""[\s"']""")
+    words.contains("sdQA")
+  }
 
   def validateGithubCI(baseDir: File): Unit = {
     for {
