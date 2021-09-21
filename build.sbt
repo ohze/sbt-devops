@@ -32,7 +32,8 @@ lazy val `sd-devops-oss` = project
   )
 
 inThisBuild(
-  List(
+  Seq(
+    versionScheme := Some("semver-spec"),
     developers := List(
       Developer(
         "thanhbv",
