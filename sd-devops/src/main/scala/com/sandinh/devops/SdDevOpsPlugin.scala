@@ -50,13 +50,6 @@ object SdDevOpsPlugin extends AutoPlugin {
     },
   ) ++ Impl.buildSettings
 
-  object env {
-    def unapply(key: String): Option[String] = sys.env.get(key)
-    def apply(keys: String*): Option[String] = keys.collectFirst {
-      case env(v) => v
-    }
-  }
-
   override lazy val globalSettings: Seq[Setting[_]] = Seq(
     sdQA := {
       // <task>.value macro causing spurious “a pure expression does nothing” warning
@@ -79,7 +72,7 @@ object SdDevOpsPlugin extends AutoPlugin {
       f <- Seq(
         ".scalafmt.conf",
         ".github/workflows/test.yml",
-        ".github/workflows/release.yml"
+        Impl.releaseYml,
       )
       to = baseDir / f
       if (!to.exists())
@@ -196,10 +189,4 @@ object SdDevOpsPlugin extends AutoPlugin {
   def orBoom(check: => Boolean, msg: String): Unit = {
     if (!check) throw new MessageOnlyException(msg)
   }
-
-//  def releaseTag: String = env("GITHUB_REF").getOrElse("<unknown>")
-//
-//  def currentBranch: String = releaseTag
-//
-//  def isTag: Boolean = env("GITHUB_REF").exists(_.startsWith("refs/tags"))
 }

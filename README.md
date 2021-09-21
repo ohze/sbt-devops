@@ -47,9 +47,7 @@ You need manually setup secrets in your github repo setting:
 
 `Your github repo -> Settings -> Secrets -> New repository secret`
 #### sd-devops (private repo)
-+ `BENNUOC_USER`, `BENNUOC_PASS`: Your username/ password in bennuoc
-
-  You can also use different secret names: `NEXUS_USER, NEXUS_PASS, SONATYPE_USERNAME, SONATYPE_PASSWORD`
++ `NEXUS_USER`, `NEXUS_PASS`: Your username/ password in bennuoc
 #### sd-devops-oss
 + `SONATYPE_USERNAME, SONATYPE_PASSWORD`: Your username/ password in sonatype oss
 + `PGP_SECRET, PGP_PASSPHRASE`: See sbt-ci-release's [guide](https://github.com/olafurpg/sbt-ci-release#gpg)
