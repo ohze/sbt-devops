@@ -9,6 +9,12 @@ import sbt.Def.Initialize
 import sbt.io.Using
 import sbt.plugins.JvmPlugin
 import sbtdynver.DynVerPlugin
+import sbtdynver.DynVerPlugin.autoImport.{
+  dynverCurrentDate,
+  dynverGitDescribeOutput,
+  dynverSeparator,
+  dynverSonatypeSnapshots
+}
 
 import java.nio.file.Files
 import scala.util.matching.Regex
@@ -25,9 +31,23 @@ object SdDevOpsPlugin extends AutoPlugin {
   }
   import autoImport._
 
+  private val dynVer =
+    settingKey[String]("version defined by DynVerPlugin.buildSettings")
+
+  private val validateVersion =
+    taskKey[Unit]("validate that you don't define version manually")
+
   override lazy val buildSettings: Seq[Setting[_]] = Seq(
     organization := "com.sandinh",
     homepage := scmInfo.value.map(_.browseUrl),
+    dynVer := { // @see in DynVerPlugin.buildSettings
+      val out = dynverGitDescribeOutput.value
+      val date = dynverCurrentDate.value
+      val separator = dynverSeparator.value
+      if (dynverSonatypeSnapshots.value)
+        out.sonatypeVersionWithSep(date, separator)
+      else out.versionWithSep(date, separator)
+    },
   ) ++ Impl.buildSettings
 
   object env {
@@ -48,6 +68,7 @@ object SdDevOpsPlugin extends AutoPlugin {
   ) ++ Impl.globalSettings
 
   override lazy val projectSettings: Seq[Setting[_]] = Seq(
+    validateVersion := validateVersionTask().value
   ) ++ Impl.projectSettings
 
   lazy val sdSetupTask: Initialize[Task[Unit]] = Def.task {
@@ -113,6 +134,13 @@ object SdDevOpsPlugin extends AutoPlugin {
     validateScalafmtConf(baseDir)
     validateGithubCI(baseDir)
     validatePluginsSbt(baseDir)
+    val _ = validateVersion.all(ScopeFilter(inAnyProject)).value
+  }
+
+  private def validateVersionTask() = Def.task {
+    val v = version.value
+    val dv = (ThisBuild / dynVer).value
+    orBoom(v == dv, s"Project ${name.value} define `version` manually!")
   }
 
   private def validatePluginsSbt(baseDir: File): Unit = {
