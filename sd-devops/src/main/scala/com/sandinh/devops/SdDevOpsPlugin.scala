@@ -10,13 +10,17 @@ import sbt.plugins.JvmPlugin
 import sbtdynver.DynVerPlugin
 import sbtdynver.DynVerPlugin.autoImport.dynverSonatypeSnapshots
 
-import java.nio.file.Files
 import scala.util.Try
-import sys.env
 
-object SdDevOpsPlugin extends AutoPlugin {
+object SdDevOpsPlugin extends AutoPlugin with Info {
   override def trigger = allRequirements
   override def requires = JvmPlugin && DynVerPlugin && GitPlugin
+
+  val scalafmtVersion = "3.0.4"
+
+  val nexusRealm = "Sonatype Nexus Repository Manager"
+  val bennuoc = "repo.bennuoc.com"
+  val bennuocMaven = s"https://$bennuoc/repository/maven"
 
   object autoImport {
     val sdQA = taskKey[Unit]("SanDinh QA (Quality Assurance)")
@@ -24,27 +28,64 @@ object SdDevOpsPlugin extends AutoPlugin {
   import autoImport._
 
   override lazy val buildSettings: Seq[Setting[_]] = Seq(
+    organization := "com.sandinh",
+    homepage := scmInfo.value.map(_.browseUrl),
+  ) ++ (if (isOss) ossBuildSettings else bennuocBuildSetting)
+
+  private lazy val ossBuildSettings = Seq(
+    licenses := List(
+      "Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0")
+    ),
+  )
+
+  private lazy val bennuocBuildSetting = Seq(
     dynverSonatypeSnapshots := true,
     scmInfo ~= {
       case Some(info) => Some(info)
       case None       => gitHubScmInfo
     },
+    resolvers += "bennuoc" at s"$bennuocMaven-public",
+  )
+
+  object env {
+    def unapply(key: String): Option[String] = sys.env.get(key)
+    def apply(keys: String*): Option[String] = keys.collectFirst {
+      case env(v) => v
+    }
+  }
+
+  override lazy val globalSettings: Seq[Setting[_]] = Seq(
+    sdQA := {
+      validates.value
+      val _ = scalafmtCheckAll.all(ScopeFilter(inAnyProject)).value
+    },
+  ) ++ (if (isOss) Nil else bennuocGlobalSettings)
+
+  lazy val bennuocGlobalSettings: Seq[Setting[_]] = Seq(
+//    credentials ++= {
+//      for {
+//        u <- env("NEXUS_USER", "BENNUOC_USER", "SONATYPE_USERNAME")
+//        p <- env("NEXUS_PASS", "BENNUOC_PASS", "SONATYPE_PASSWORD")
+//      } yield Credentials(nexusRealm, bennuoc, u, p)
+//    },
   )
 
   override lazy val projectSettings: Seq[Setting[_]] = Seq(
-    sdQA := {
-      validates.value
-      scalafmtCheckAll.value
+  ) ++ (if (isOss) Nil else bennuocSettings)
+
+  private lazy val bennuocSettings = Seq(
+    publishMavenStyle := true,
+    publishTo := {
+      val tpe = if (isSnapshot.value) "snapshots" else "releases"
+      Some(tpe at s"$bennuocMaven-$tpe")
     },
   )
 
-  val validates: Initialize[Task[Unit]] = Def.task {
+  lazy val validates: Initialize[Task[Unit]] = Def.task {
     val baseDir = (ThisBuild / baseDirectory).value
     validateScalafmtConf(baseDir)
     validateGithubCI(baseDir)
   }
-
-  val scalafmtVersion = "3.0.4"
 
   private def isSdQAStep(line: String) =
     line.trim.startsWith("- run: sbt ") && line.endsWith(" sdQA")
@@ -79,11 +120,11 @@ object SdDevOpsPlugin extends AutoPlugin {
     if (!check) throw new MessageOnlyException(msg)
   }
 
-  def releaseTag: String = env.getOrElse("GITHUB_REF", "<unknown>")
-
-  def currentBranch: String = releaseTag
-
-  def isTag: Boolean = env.get("GITHUB_REF").exists(_.startsWith("refs/tags"))
+//  def releaseTag: String = env("GITHUB_REF").getOrElse("<unknown>")
+//
+//  def currentBranch: String = releaseTag
+//
+//  def isTag: Boolean = env("GITHUB_REF").exists(_.startsWith("refs/tags"))
 
   def gitHubScmInfo(user: String, repo: String) =
     ScmInfo(
