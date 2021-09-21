@@ -137,7 +137,7 @@ object SdDevOpsPlugin extends AutoPlugin {
       val s = Regex.quote(plugin)
       val r = s""".+%\\s*"$s".*"""
       lines.exists { line =>
-        !line.stripLeading.startsWith("//") && line.matches(r)
+        !line.trim.startsWith("//") && line.matches(r)
       }
     }
     def check(plugin: String): Unit =
