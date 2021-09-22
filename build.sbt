@@ -51,3 +51,4 @@ lazy val `sd-devops-root` = project
   .settings(
     publish / skip := true
   )
+  .aggregate(`sd-devops`, `sd-devops-oss`)
