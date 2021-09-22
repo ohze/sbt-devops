@@ -96,7 +96,8 @@ object SdDevOpsPlugin extends AutoPlugin {
       if (!to.exists()) {
         val url = new URL(s"$baseUrl/files/$filename")
         log.info(s"download $url\nto $to")
-        val lines = Using.urlReader(IO.utf8)(url)(_.lines().toList.asScala)
+        val lines =
+          Using.urlReader(IO.utf8)(url)(_.lines().iterator().asScala.toSeq)
         Using.fileWriter()(to) { w =>
           linesTransformer(lines).foreach { s => w.write(s); w.newLine() }
         }
