@@ -2,7 +2,10 @@ package com.sandinh.devops
 
 import com.typesafe.config.ConfigFactory
 import com.typesafe.sbt.GitPlugin
-import org.scalafmt.sbt.ScalafmtPlugin.autoImport.scalafmtCheckAll
+import org.scalafmt.sbt.ScalafmtPlugin.autoImport.{
+  scalafmtCheck,
+  scalafmtSbtCheck
+}
 import sbt._
 import sbt.Keys._
 import sbt.Def.Initialize
@@ -50,12 +53,21 @@ object SdDevOpsPlugin extends AutoPlugin {
     },
   ) ++ Impl.buildSettings
 
+  private val inAny = ScopeFilter(inAnyProject, inAnyConfiguration)
+
   override lazy val globalSettings: Seq[Setting[_]] = Seq(
     sdQA := {
       // <task>.value macro causing spurious “a pure expression does nothing” warning
       // This `val _ =` is not need if we set `pluginCrossBuild` to a newer sbt version
       val _ = validatesTask().value
-      val __ = scalafmtCheckAll.all(ScopeFilter(inAnyProject)).value
+      val fmtOk = scalafmtCheck.?.all(inAny).result.value.isSuccess
+      val sbtOk = scalafmtSbtCheck.?.all(inAny).result.value.isSuccess
+      orBoom(
+        fmtOk && sbtOk,
+        """Some files aren't formatted properly.
+          |You should format code by running: sbt "+scalafmtAll; +scalafmtSbt"
+          |RECOMMEND: git commit or stash all changes before formatting.""".stripMargin
+      )
     },
     sdSetup := sdSetupTask().value,
   ) ++ Impl.globalSettings
@@ -209,5 +221,12 @@ object SdDevOpsPlugin extends AutoPlugin {
 
   def orBoom(check: => Boolean, msg: String): Unit = {
     if (!check) throw new MessageOnlyException(msg)
+  }
+
+  implicit class ResultOps(val r: Result[_]) extends AnyVal {
+    def isSuccess: Boolean = r match {
+      case Value(_) => true
+      case Inc(_)   => false
+    }
   }
 }
