@@ -6,8 +6,9 @@ lazy val pluginSettings = Seq(
     }
   },
   // https://www.scala-sbt.org/1.x/docs/Testing-sbt-plugins.html
-  scriptedLaunchOpts := { scriptedLaunchOpts.value ++
-    Seq("-Xmx1024M", "-Dplugin.version=" + version.value)
+  scriptedLaunchOpts := {
+    scriptedLaunchOpts.value ++
+      Seq("-Xmx1024M", "-Dplugin.version=" + version.value)
   },
   scriptedBufferLog := false,
 )
@@ -45,4 +46,4 @@ inThisBuild(
   )
 )
 
-publish/ skip := true // don't publish the root project
+publish / skip := true // don't publish the root project
