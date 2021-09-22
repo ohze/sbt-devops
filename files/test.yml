@@ -6,7 +6,7 @@ jobs:
     strategy:
       matrix:
         java: [ '8', '11', '16' ]
-        scala: [ '2.12.15' ]
+        scala: [ '2.13.6' ]
     steps:
       - uses: actions/checkout@v2
       - uses: coursier/cache-action@v6
@@ -16,6 +16,9 @@ jobs:
           distribution: 'temurin'
       - uses: coursier/cache-action@v6
       - run: sbt ++${{ matrix.scala }} sdQA test
+        env: # bennuoc only
+          NEXUS_USER: ${{ secrets.NEXUS_USER }}
+          NEXUS_PASS: ${{ secrets.NEXUS_PASS }}
       # https://www.scala-sbt.org/1.x/docs/GitHub-Actions-with-sbt.html#Caching
       - run: |
           rm -rf "$HOME/.ivy2/local" || true

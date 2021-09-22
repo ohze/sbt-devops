@@ -21,6 +21,7 @@ import sbtdynver.DynVerPlugin.autoImport.{
 
 import java.nio.file.Files
 import scala.util.matching.Regex
+import scala.collection.JavaConverters._
 
 object SdDevOpsPlugin extends AutoPlugin {
   override def trigger = allRequirements
@@ -86,34 +87,39 @@ object SdDevOpsPlugin extends AutoPlugin {
 
   private def setupFiles(baseDir: File, log: Logger): Unit = {
     val baseUrl = "https://raw.githubusercontent.com/ohze/sd-devops/main"
-    for {
-      (fname, toDir) <- Seq(
-        ".scalafmt.conf" -> "",
-        "test.yml" -> ".github/workflows",
-        "release.yml" -> ".github/workflows",
-      )
-      to = baseDir / toDir / fname
-      if (!to.exists())
-    } { //.github/workflows
-      val url = new URL(s"$baseUrl/files/$fname")
-      log.info(s"download $url\nto $to")
-      if (fname != "release.yml") {
-        Using.urlInputStream(url)(IO.transfer(_, to))
-      } else {
-        def isEnv(line: String) =
-          Impl.ciReleaseEnvs.exists(v => line.endsWith(s"{{ secrets.$v }}"))
-        Using.urlReader(IO.utf8)(url) { r =>
-          Using.fileWriter()(to) { w =>
-            r.lines()
-              .map { line =>
-                if (isEnv(line)) line.substring(1) // remove '#'
-                else line
-              }
-              .forEachOrdered(s => w.write(s + "\n"))
-          }
+    type Trans = Seq[String] => Seq[String]
+
+    def fetch(filename: String, toDir: String)(
+        linesTransformer: Trans
+    ): Unit = {
+      val to = baseDir / toDir / filename
+      if (!to.exists()) {
+        val url = new URL(s"$baseUrl/files/$filename")
+        log.info(s"download $url\nto $to")
+        val lines = Using.urlReader(IO.utf8)(url)(_.lines().toList.asScala)
+        Using.fileWriter()(to) { w =>
+          linesTransformer(lines).foreach { s => w.write(s); w.newLine() }
         }
       }
     }
+
+    fetch(".scalafmt.conf", "")(identity)
+
+    fetch("release.yml", ".github/workflows") { lines =>
+      val (head, tail0) = lines.span(_ != "# magic-comment: oss")
+      val (mid, tail1) = tail0.span(_ != "# magic-comment: bennuoc")
+      val tail = (if (Impl.isOss) mid else tail1).drop(1)
+      val (mandatory, optional) = tail.span(_ != "# optional")
+      head ++ mandatory.map(_.substring(1)) ++ optional
+    }
+
+    val removeEnvs: Trans = lines => {
+      val (head, tail) = lines.span(!isSdQAStep(_))
+      (head :+ tail.head) ++ tail.drop(4)
+    }
+    fetch("test.yml", ".github/workflows")(
+      if (Impl.isOss) removeEnvs else identity
+    )
   }
 
   def setupReadme(readme: File, log: Logger): Unit = {

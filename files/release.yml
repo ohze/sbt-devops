@@ -16,20 +16,20 @@ jobs:
           java-version: '8'
       - run: sbt ci-release
         env:
-        # only for sonatype oss / sd-devops-oss
+# magic-comment: oss
 #          PGP_PASSPHRASE: ${{ secrets.PGP_PASSPHRASE }}
 #          PGP_SECRET: ${{ secrets.PGP_SECRET }}
 #          SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
 #          SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
-        # optional
+# optional
 #          CI_CLEAN: '; clean ; sonatypeBundleClean'
 #          CI_RELEASE: '+publishSigned'
 #          CI_SONATYPE_RELEASE: 'sonatypeBundleRelease'
-        # only for bennuoc / sd-devops
+#          CI_SNAPSHOT_RELEASE: '+publish'
+# magic-comment: bennuoc
 #          NEXUS_USER: ${{ secrets.NEXUS_USER }}
 #          NEXUS_PASS: ${{ secrets.NEXUS_PASS }}
-        # optional
+# optional
 #          CI_CLEAN: 'clean'
 #          CI_RELEASE: '+publish'
-        # optional, for both sd-devops-oss & sd-devops
-          CI_SNAPSHOT_RELEASE: '+publish'
+#          CI_SNAPSHOT_RELEASE: '+publish'

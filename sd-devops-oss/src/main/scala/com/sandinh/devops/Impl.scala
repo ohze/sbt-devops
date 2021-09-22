@@ -14,10 +14,5 @@ object Impl {
 
   lazy val projectSettings: Seq[Setting[_]] = Nil
 
-  private[devops] val ciReleaseEnvs = Seq(
-    "PGP_PASSPHRASE",
-    "PGP_SECRET",
-    "SONATYPE_PASSWORD",
-    "SONATYPE_USERNAME"
-  )
+  val isOss = true
 }
