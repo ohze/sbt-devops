@@ -46,4 +46,8 @@ inThisBuild(
   )
 )
 
-publish / skip := true // don't publish the root project
+lazy val `sd-devops-root` = project
+  .in(file("."))
+  .settings(
+    publish / skip := true
+  )
