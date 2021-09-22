@@ -177,7 +177,7 @@ object SdDevOpsPlugin extends AutoPlugin {
     val prefix = "- run: sbt "
     val s = line.trim
     if (!s.startsWith(prefix)) return false
-    val words = s.substring(prefix.length).split("""[\s"']""")
+    val words = s.substring(prefix.length).split("""[/\s"']""")
     words.contains("sdQA")
   }
 
