@@ -65,23 +65,46 @@ object SdDevOpsPlugin extends AutoPlugin {
   ) ++ Impl.projectSettings
 
   lazy val sdSetupTask: Initialize[Task[Unit]] = Def.task {
-    val baseUrl = "https://raw.githubusercontent.com/ohze/sd-devops/main"
     val baseDir = (ThisBuild / baseDirectory).value
     val log = streams.value.log
-    for {
-      f <- Seq(
-        ".scalafmt.conf",
-        ".github/workflows/test.yml",
-        Impl.releaseYml,
-      )
-      to = baseDir / f
-      if (!to.exists())
-    } {
-      log.info(s"download $f")
-      Using.urlInputStream(new URL(s"$baseUrl/$f"))(IO.transfer(_, to))
-    }
+    setupFiles(baseDir, log)
+    setupReadme(baseDir / "README.md", log)
+    log.info("Done")
+  }
 
-    val readme = baseDir / "README.md"
+  private def setupFiles(baseDir: File, log: Logger): Unit = {
+    val baseUrl = "https://raw.githubusercontent.com/ohze/sd-devops/main"
+    for {
+      (fname, toDir) <- Seq(
+        ".scalafmt.conf" -> "",
+        "test.yml" -> ".github/workflows",
+        "release.yml" -> ".github/workflows",
+      )
+      to = baseDir / toDir / fname
+      if (!to.exists())
+    } { //.github/workflows
+      val url = new URL(s"$baseUrl/files/$fname")
+      log.info(s"download $url\nto $to")
+      if (fname != "release.yml") {
+        Using.urlInputStream(url)(IO.transfer(_, to))
+      } else {
+        def isEnv(line: String) =
+          Impl.ciReleaseEnvs.exists(v => line.endsWith(s"{{ secrets.$v }}"))
+        Using.urlReader(IO.utf8)(url) { r =>
+          Using.fileWriter()(to) { w =>
+            r.lines()
+              .map { line =>
+                if (isEnv(line)) line.substring(1) // remove '#'
+                else line
+              }
+              .forEachOrdered(s => w.write(s + "\n"))
+          }
+        }
+      }
+    }
+  }
+
+  def setupReadme(readme: File, log: Logger): Unit = {
     def badge(user: String, repo: String) = {
       val url = s"https://github.com/$user/$repo/actions/workflows/test.yml"
       s"[![CI]($url/badge.svg)]($url)"
@@ -111,8 +134,6 @@ object SdDevOpsPlugin extends AutoPlugin {
         }
       }
     }
-
-    log.info("Done")
   }
 
   lazy val validates: Initialize[Task[Unit]] = Def.task {

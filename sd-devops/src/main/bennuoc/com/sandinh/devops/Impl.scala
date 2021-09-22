@@ -57,5 +57,5 @@ object Impl {
 
   def isTag: Boolean = env.get("GITHUB_REF").exists(_.startsWith("refs/tags"))
 
-  private[devops] val releaseYml = "sd-devops/src/release.yml"
+  private[devops] val ciReleaseEnvs = Seq("NEXUS_USER", "NEXUS_PASS")
 }
