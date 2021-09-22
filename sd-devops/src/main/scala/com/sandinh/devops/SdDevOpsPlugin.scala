@@ -54,17 +54,17 @@ object SdDevOpsPlugin extends AutoPlugin {
     sdQA := {
       // <task>.value macro causing spurious “a pure expression does nothing” warning
       // This `val _ =` is not need if we set `pluginCrossBuild` to a newer sbt version
-      val _ = validates.value
+      val _ = validatesTask().value
       val __ = scalafmtCheckAll.all(ScopeFilter(inAnyProject)).value
     },
-    sdSetup := sdSetupTask.value,
+    sdSetup := sdSetupTask().value,
   ) ++ Impl.globalSettings
 
   override lazy val projectSettings: Seq[Setting[_]] = Seq(
     validateVersion := validateVersionTask().value
   ) ++ Impl.projectSettings
 
-  lazy val sdSetupTask: Initialize[Task[Unit]] = Def.task {
+  def sdSetupTask(): Initialize[Task[Unit]] = Def.task {
     val baseDir = (ThisBuild / baseDirectory).value
     val log = streams.value.log
     setupFiles(baseDir, log)
@@ -136,7 +136,7 @@ object SdDevOpsPlugin extends AutoPlugin {
     }
   }
 
-  lazy val validates: Initialize[Task[Unit]] = Def.task {
+  def validatesTask(): Initialize[Task[Unit]] = Def.task {
     val baseDir = (ThisBuild / baseDirectory).value
     validateScalafmtConf(baseDir)
     validateGithubCI(baseDir)
@@ -144,7 +144,7 @@ object SdDevOpsPlugin extends AutoPlugin {
     val _ = validateVersion.all(ScopeFilter(inAnyProject)).value
   }
 
-  private def validateVersionTask() = Def.task {
+  def validateVersionTask(): Initialize[Task[Unit]] = Def.task {
     val v = version.value
     val dv = (ThisBuild / dynVer).value
     orBoom(v == dv, s"Project ${name.value} define `version` manually!")
