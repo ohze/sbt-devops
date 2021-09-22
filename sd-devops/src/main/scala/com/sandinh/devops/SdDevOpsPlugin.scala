@@ -22,6 +22,7 @@ import sbtdynver.DynVerPlugin.autoImport.{
 import java.nio.file.Files
 import scala.util.matching.Regex
 import scala.collection.JavaConverters._
+import scala.collection.immutable.Seq
 
 object SdDevOpsPlugin extends AutoPlugin {
   override def trigger = allRequirements
@@ -97,7 +98,7 @@ object SdDevOpsPlugin extends AutoPlugin {
         val url = new URL(s"$baseUrl/files/$filename")
         log.info(s"download $url\nto $to")
         val lines =
-          Using.urlReader(IO.utf8)(url)(_.lines().iterator().asScala.toSeq)
+          Using.urlReader(IO.utf8)(url)(_.lines().iterator().asScala.toList)
         Using.fileWriter()(to) { w =>
           linesTransformer(lines).foreach { s => w.write(s); w.newLine() }
         }
