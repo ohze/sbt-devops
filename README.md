@@ -43,7 +43,11 @@ addSbtPlugin("com.sandinh" % "sd-devops-oss" % "<version>")
 ```
 
 ## Usage
-You need manually setup secrets in your github repo setting:
+1. install (see above) -> run `sbt sdSetup`
+2. (optional) customize `.scalafmt.conf, .github/workflows/{test.yml, release.yml}`
+3. (optional) remove some sbt settings that have been defined by sd-devops such as `publishTo`,.. see above.
+4. run `sbt +sdQA`
+5. To auto release, you need manually setup secrets in your github repo setting:
 
 `Your github repo -> Settings -> Secrets -> New repository secret`
 #### sd-devops (private repo)
@@ -51,3 +55,6 @@ You need manually setup secrets in your github repo setting:
 #### sd-devops-oss
 + `SONATYPE_USERNAME, SONATYPE_PASSWORD`: Your username/ password in sonatype oss
 + `PGP_SECRET, PGP_PASSPHRASE`: See sbt-ci-release's [guide](https://github.com/olafurpg/sbt-ci-release#gpg)
+
+6. Commit changes, push -> auto publish SNAPSHOT. Push tag -> auto publish release version.
+7. Enjoy
