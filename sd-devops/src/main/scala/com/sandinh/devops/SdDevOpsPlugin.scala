@@ -118,18 +118,25 @@ object SdDevOpsPlugin extends AutoPlugin {
       "GITHUB_RUN_ID",
       boom("sdMmNotify task must be run in Github Action")
     )
-    val link =
-      s"${env("GITHUB_SERVER_URL")}/${env("GITHUB_REPOSITORY")}/actions/runs/$runId"
+    val home = s"${env("GITHUB_SERVER_URL")}/${env("GITHUB_REPOSITORY")}"
+    val link = s"$home/actions/runs/$runId"
     val jobs = for {
       v <- env.get("SD_MM_NEEDS").toSeq
       (jobName, job) <- ujson.read(v).obj
     } yield Job(jobName, job.obj("result").str)
 
+    val text = env("GITHUB_EVENT_NAME") match {
+      case "pull_request" =>
+        val payloadFile = file(env("GITHUB_EVENT_PATH"))
+        val pr = ujson.read(payloadFile).obj("number").num.toLong
+        s"pull request [#$pr]($home/pull/$pr)"
+      case _ => s"commit: $commitMsg"
+    }
     val attachment = ujson.Obj(
       "fallback" -> jobs.mkString("CI jobs status: ", ", ", ""),
       "author_name" -> env("GITHUB_REPOSITORY"),
       "author_icon" -> "https://chat.ohze.net/api/v4/emoji/tu6nrabuftrk78rm78mapoq7to/image",
-      "text" -> s"[CI jobs status]($link) for commit: $commitMsg",
+      "text" -> s"[CI jobs status]($link) for $text",
       "fields" -> jobs.map(_.asAttachmentField(version)),
     )
     env.get("MATTERMOST_PRETEXT").foreach(attachment("pretext") = _)
