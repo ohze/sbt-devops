@@ -102,6 +102,11 @@ object SdDevOpsPlugin extends AutoPlugin {
     override def toString: String = s"$name: $result"
   }
 
+  private def commitMsg = {
+    import sys.process._
+    s"git show -s --format=%s ${env("GITHUB_SHA")}".!!.trim
+  }
+
   // https://developers.mattermost.com/integrate/incoming-webhooks/#parameters
   def sdMmNotifyTask: Initialize[Task[Unit]] = Def.task {
     val version = (ThisBuild / dynVer).value
@@ -120,19 +125,16 @@ object SdDevOpsPlugin extends AutoPlugin {
       (jobName, job) <- ujson.read(v).obj
     } yield Job(jobName, job.obj("result").str)
 
-    import sys.process._
-    val commitMsg = s"git show -s --format=%s ${env("GITHUB_SHA")}".!!.trim
-    val data = ujson.Obj(
-      "attachments" -> ujson.Arr(
-        ujson.Obj(
-          "fallback" -> jobs.mkString("CI jobs status: ", ", ", ""),
-          "author_name" -> env("GITHUB_REPOSITORY"),
-          "author_icon" -> "https://chat.ohze.net/api/v4/emoji/tu6nrabuftrk78rm78mapoq7to/image",
-          "text" -> s"[CI jobs status]($link) for commit: $commitMsg",
-          "fields" -> jobs.map(_.asAttachmentField(version)),
-        )
-      )
+    val attachment = ujson.Obj(
+      "fallback" -> jobs.mkString("CI jobs status: ", ", ", ""),
+      "author_name" -> env("GITHUB_REPOSITORY"),
+      "author_icon" -> "https://chat.ohze.net/api/v4/emoji/tu6nrabuftrk78rm78mapoq7to/image",
+      "text" -> s"[CI jobs status]($link) for commit: $commitMsg",
+      "fields" -> jobs.map(_.asAttachmentField(version)),
     )
+    env.get("MATTERMOST_PRETEXT").foreach(attachment("pretext") = _)
+
+    val data = ujson.Obj("attachments" -> ujson.Arr(attachment))
 
     val urlPattern = "https?://.*".r
     env.get("MATTERMOST_ICON") match {

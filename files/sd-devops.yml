@@ -51,5 +51,10 @@ jobs:
           fetch-depth: 0
       - run: sbt sdMmNotify
         env:
-          MATTERMOST_WEBHOOK_URL: ${{ secrets.MATTERMOST_WEBHOOK_URL }}
           SD_MM_NEEDS: ${{ toJSON(needs) }}
+          MATTERMOST_WEBHOOK_URL: ${{ secrets.MATTERMOST_WEBHOOK_URL }}
+          # optional. See https://developers.mattermost.com/integrate/incoming-webhooks/#parameters
+          #MATTERMOST_PRETEXT: Message shown above the CI status attachment, ex to mention some user. Default empty.
+          #MATTERMOST_ICON: icon_url or icon_emoji
+          #MATTERMOST_CHANNEL: use default of the webhook if not set
+          #MATTERMOST_USERNAME: use default of the webhook if not set
