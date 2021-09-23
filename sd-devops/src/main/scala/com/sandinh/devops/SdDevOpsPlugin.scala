@@ -169,7 +169,7 @@ object SdDevOpsPlugin extends AutoPlugin {
     log.info("Done")
   }
 
-  private lazy val ymlReplace = {
+  private lazy val ymlReplace: Map[String, Seq[String]] = {
     def envReleaseOss =
       """env:
         |  PGP_PASSPHRASE: ${{ secrets.PGP_PASSPHRASE }}
@@ -180,11 +180,11 @@ object SdDevOpsPlugin extends AutoPlugin {
         |  #CI_CLEAN: '; clean ; sonatypeBundleClean'
         |  #CI_RELEASE: '+publishSigned'
         |  #CI_SONATYPE_RELEASE: 'sonatypeBundleRelease'
-        |  #CI_SNAPSHOT_RELEASE: '+publish'""".stripMargin.linesIterator
+        |  #CI_SNAPSHOT_RELEASE: '+publish'""".stripMargin.linesIterator.toList
     val envBennuoc =
       """env:
         |  NEXUS_USER: ${{ secrets.NEXUS_USER }}
-        |  NEXUS_PASS: ${{ secrets.NEXUS_PASS }}""".stripMargin.linesIterator
+        |  NEXUS_PASS: ${{ secrets.NEXUS_PASS }}""".stripMargin.linesIterator.toList
     def envReleaseBennuoc = envBennuoc ++
       """  # optional
         |  #CI_CLEAN: 'clean'
@@ -198,7 +198,7 @@ object SdDevOpsPlugin extends AutoPlugin {
         |  github.event_name == 'push' &&
         |  (github.ref == 'refs/heads/main' ||
         |    github.ref == 'refs/heads/master' ||
-        |    startsWith(github.ref, 'refs/tags/'))""".stripMargin.linesIterator
+        |    startsWith(github.ref, 'refs/tags/'))""".stripMargin.linesIterator.toList
     def ifBennuoc = Seq("if: success()")
     val condition = if (Impl.isOss) ifOss else ifBennuoc
 
