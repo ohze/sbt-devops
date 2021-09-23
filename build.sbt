@@ -13,23 +13,29 @@ lazy val pluginSettings = Seq(
   scriptedBufferLog := false,
 )
 
+lazy val commonDeps = Seq(
+  addSbtPlugin("org.scalameta" % "sbt-scalafmt" % "2.4.3"),
+  libraryDependencies ++= Seq(
+    "com.lihaoyi" %% "requests" % "0.6.9",
+    "com.lihaoyi" %% "ujson" % "1.4.1",
+  )
+)
+
 lazy val `sd-devops` = project
   .enablePlugins(SbtPlugin)
-  .settings(pluginSettings)
+  .settings(pluginSettings ++ commonDeps)
   .settings(
     addSbtPlugin("com.dwijnand" % "sbt-dynver" % "4.1.1"),
     addSbtPlugin("com.typesafe.sbt" % "sbt-git" % "1.0.1"),
-    addSbtPlugin("org.scalameta" % "sbt-scalafmt" % "2.4.3"),
-    Compile / unmanagedSourceDirectories += (Compile / scalaSource).value.getParentFile / "bennuoc"
+    Compile / unmanagedSourceDirectories += (Compile / scalaSource).value.getParentFile / "bennuoc",
   )
 
 lazy val `sd-devops-oss` = project
   .enablePlugins(SbtPlugin)
-  .settings(pluginSettings)
+  .settings(pluginSettings ++ commonDeps)
   .settings(
     addSbtPlugin("com.geirsson" % "sbt-ci-release" % "1.5.7"),
-    addSbtPlugin("org.scalameta" % "sbt-scalafmt" % "2.4.3"),
-    Compile / unmanagedSourceDirectories += (`sd-devops` / Compile / scalaSource).value
+    Compile / unmanagedSourceDirectories += (`sd-devops` / Compile / scalaSource).value,
   )
 
 inThisBuild(

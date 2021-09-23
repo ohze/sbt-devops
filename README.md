@@ -1,6 +1,6 @@
 # sd-devops
 
-[![CI](https://github.com/ohze/sd-devops/actions/workflows/test.yml/badge.svg)](https://github.com/ohze/sd-devops/actions/workflows/test.yml)
+[![CI](https://github.com/ohze/sd-devops/actions/workflows/sd-devops.yml/badge.svg)](https://github.com/ohze/sd-devops/actions/workflows/sd-devops.yml)
 
 #### Sân Đình devops automator for scala projects
 This is a sbt AutoPlugin that do 3 things:
