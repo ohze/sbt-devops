@@ -32,10 +32,17 @@ object Impl {
     commands += Command.command("ci-release") { state =>
       println(s"Running ci-release.\n  branch=$currentBranch")
       if (!isTag) {
-        println(s"No tag push, publishing SNAPSHOT")
-        "version" ::
-          env.getOrElse("CI_SNAPSHOT_RELEASE", "+publish") ::
+        if (isSnapshotVersion(state)) {
+          println(s"No tag push, publishing SNAPSHOT")
+          env.getOrElse("CI_SNAPSHOT_RELEASE", "+publish") :: state
+        } else {
+          // Happens when a tag is pushed right after merge causing the master branch
+          // job to pick up a non-SNAPSHOT version even if isTag=false.
+          println(
+            "Snapshot releases must have -SNAPSHOT version number, doing nothing"
+          )
           state
+        }
       } else {
         println("Tag push detected, publishing a stable release")
         env.getOrElse("CI_CLEAN", "clean") ::
@@ -56,6 +63,13 @@ object Impl {
   def currentBranch: String = env.getOrElse("GITHUB_REF", "<unknown>")
 
   def isTag: Boolean = env.get("GITHUB_REF").exists(_.startsWith("refs/tags"))
+
+  def isSnapshotVersion(state: State): Boolean = {
+    version.in(ThisBuild).get(Project.extract(state).structure.data) match {
+      case Some(v) => v.endsWith("-SNAPSHOT")
+      case None    => throw new NoSuchFieldError("version")
+    }
+  }
 
   val isOss = false
 }
