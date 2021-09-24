@@ -10,8 +10,17 @@ lazy val pluginSettings = Seq(
     scriptedLaunchOpts.value ++
       Seq("-Xmx1024M", "-Dplugin.version=" + version.value)
   },
-  scriptedBufferLog := false,
+  scripted := scripted.dependsOn(scriptedPrepare).evaluated,
 )
+
+def scriptedPrepare = Def.task {
+  val d = sbtTestDirectory.value / "all"
+  for {
+    prjDir <- (PathFinder(d) * DirectoryFilter).get()
+    f = prjDir / "project/plugins.sbt"
+    if !f.isFile
+  } IO.copyFile(d / "plugins.sbt", f)
+}
 
 lazy val commonDeps = Seq(
   addSbtPlugin("org.scalameta" % "sbt-scalafmt" % "2.4.3"),

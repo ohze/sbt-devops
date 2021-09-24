@@ -1,0 +1,6 @@
+> sdSetup
+# $ pause
+-> sdQA
+> scalafmtSbt
+> sdQA
+> check

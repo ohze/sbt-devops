@@ -8,4 +8,4 @@ metals.sbt
 /*/target/
 **/project/target/
 **/sbt-test/**/target
-**/sbt-test/*/*/project/build.properties
+**/sbt-test/*/*/project/plugins.sbt
