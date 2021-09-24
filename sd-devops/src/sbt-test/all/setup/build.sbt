@@ -1,10 +1,37 @@
+import munit.Assertions._
 
-TaskKey[Unit]("check") := {
-  val base = (ThisBuild / baseDirectory).value
-
-  val readme = base / "README.md"
-  orBoom(readme.isFile, "README.md not created")
+TaskKey[Unit]("readme1") := {
+  IO.write((ThisBuild / baseDirectory).value / "README.md", "# repo")
 }
 
-def boom(msg: String) = throw new MessageOnlyException(msg)
-def orBoom(check: => Boolean, msg: String): Unit = if (!check) boom(msg)
+TaskKey[Unit]("check1Fail") := {
+  assertNoDiff(IO.read((ThisBuild / baseDirectory).value / "README.md"), "# repo-diff")
+}
+
+TaskKey[Unit]("check1") := {
+  assertNoDiff(IO.read((ThisBuild / baseDirectory).value / "README.md"),
+    """# repo
+      |
+      |[![CI](https://github.com/user/repo1/actions/workflows/sd-devops.yml/badge.svg)](https://github.com/user/repo1/actions/workflows/sd-devops.yml)
+      |""".stripMargin, "Invalid README.md")
+}
+
+TaskKey[Unit]("readme2") := {
+  IO.write((ThisBuild / baseDirectory).value / "README.md",
+    """repo-2
+      |======
+      |[![CI](h
+      |""".stripMargin)
+}
+
+TaskKey[Unit]("check2") := {
+  assertNoDiff(IO.read((ThisBuild / baseDirectory).value / "README.md"),
+    """repo-2
+      |======
+      |
+      |[![CI](https://github.com/user/repo1/actions/workflows/sd-devops.yml/badge.svg)](https://github.com/user/repo1/actions/workflows/sd-devops.yml)
+      |
+      |[![CI](h
+      |""".stripMargin, "Invalid README.md")
+}
+
