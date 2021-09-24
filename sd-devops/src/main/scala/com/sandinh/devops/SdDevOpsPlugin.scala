@@ -258,11 +258,20 @@ object SdDevOpsPlugin extends AutoPlugin {
         val b = badge(user, repo)
         val hasBadge = Files.lines(readme.toPath).anyMatch(_ == b)
         if (!hasBadge) {
-          val (head, tail) = IO
-            .readLines(readme)
-            .span(l => l.trim.isEmpty || l.trim.startsWith("# "))
-          val insert = "" :: b :: "" :: Nil
-          IO.writeLines(readme, head ++ insert ++ tail)
+          val lines = IO.readLines(readme).toIndexedSeq
+          def onlyEq(i: Int) = i < lines.size && lines(i).forall(_ == '=')
+          def isH1(i: Int) = i < lines.size && lines(i).startsWith("# ")
+
+          def h1(from: Int): Int =
+            if (isH1(from)) 0
+            else if (onlyEq(from + 1)) 1
+            else -1
+
+          val patchIdx = lines.indices
+            .collectFirst { case i if h1(i) != -1 => i + h1(i) }
+            .getOrElse(-1)
+
+          IO.writeLines(readme, lines.patch(patchIdx, "" :: b :: "" :: Nil, 0))
         }
     }
   }
