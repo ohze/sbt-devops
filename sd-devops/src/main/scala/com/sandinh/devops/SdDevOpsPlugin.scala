@@ -238,18 +238,18 @@ object SdDevOpsPlugin extends AutoPlugin {
     })
   }
 
-  def setupReadme(readme: File, log: Logger): Unit = {
-    def badge(user: String, repo: String) = {
-      val url =
-        s"https://github.com/$user/$repo/actions/workflows/sd-devops.yml"
-      s"[![CI]($url/badge.svg)]($url)"
-    }
+  private def badge(user: String, repo: String) = {
+    val url = s"https://github.com/$user/$repo/actions/workflows/sd-devops.yml"
+    s"[![CI]($url/badge.svg)]($url)"
+  }
 
+  def setupReadme(readme: File, log: Logger): Unit =
     Utils.gitHubInfo match {
       case None =>
         log.warn("""Can't add CI badge to README.md
             |Pls set github repo as your git `origin` remote and re-run sbt sdSetup
             |""".stripMargin)
+        IO.touch(readme)
 
       case Some((user, repo)) if !readme.exists() =>
         IO.write(readme, s"# $repo\n\n${badge(user, repo)}\n\nTODO\n")
@@ -274,7 +274,6 @@ object SdDevOpsPlugin extends AutoPlugin {
           IO.writeLines(readme, lines.patch(patchIdx, "" :: b :: "" :: Nil, 0))
         }
     }
-  }
 
   def sdQaBaseTask: Initialize[Task[Unit]] = Def.task {
     val baseDir = (ThisBuild / baseDirectory).value
