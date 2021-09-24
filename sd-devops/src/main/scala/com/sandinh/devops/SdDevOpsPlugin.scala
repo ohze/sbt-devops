@@ -268,7 +268,7 @@ object SdDevOpsPlugin extends AutoPlugin {
             else -1
 
           val patchIdx = lines.indices
-            .collectFirst { case i if h1(i) != -1 => i + h1(i) }
+            .collectFirst { case i if h1(i) != -1 => i + h1(i) + 1 }
             .getOrElse(-1)
 
           IO.writeLines(readme, lines.patch(patchIdx, "" :: b :: "" :: Nil, 0))
