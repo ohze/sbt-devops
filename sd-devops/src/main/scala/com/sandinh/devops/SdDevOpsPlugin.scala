@@ -280,6 +280,9 @@ object SdDevOpsPlugin extends AutoPlugin {
     validateScalafmtConf(baseDir)
     validateGithubCI(baseDir)
     validatePluginsSbt(baseDir)
+
+    val f = baseDir / "README.md"
+    orBoom(f.isFile, "You should create README.md by running sbt sdSetup")
   }
 
   def sdQaVersionTask: Initialize[Task[Unit]] = Def.task {
