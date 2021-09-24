@@ -24,6 +24,7 @@ import scala.util.matching.Regex
 import scala.collection.JavaConverters._
 import scala.collection.immutable.Seq
 import scala.sys.env
+import Impl.isOss
 
 object SdDevOpsPlugin extends AutoPlugin {
   override def trigger = allRequirements
@@ -190,22 +191,20 @@ object SdDevOpsPlugin extends AutoPlugin {
         |  #CI_CLEAN: 'clean'
         |  #CI_RELEASE: '+publish'
         |  #CI_SNAPSHOT_RELEASE: '+publish'""".stripMargin.linesIterator
-    val envRelease = if (Impl.isOss) envReleaseOss else envReleaseBennuoc
 
-    def ifOss =
+    def condOss =
       """if: |
         |  success() &&
         |  github.event_name == 'push' &&
         |  (github.ref == 'refs/heads/main' ||
         |    github.ref == 'refs/heads/master' ||
         |    startsWith(github.ref, 'refs/tags/'))""".stripMargin.linesIterator.toList
-    def ifBennuoc = Seq("if: success()")
-    val condition = if (Impl.isOss) ifOss else ifBennuoc
+    def condBennuoc = Seq("if: success()")
 
     Map(
-      "# env: bennuoc" -> envBennuoc,
-      "# env: ci-release" -> envRelease,
-      "# if: publish-condition" -> condition
+      "# env: bennuoc" -> (if (isOss) Nil else envBennuoc),
+      "# env: ci-release" -> (if (isOss) envReleaseOss else envReleaseBennuoc),
+      "# if: publish-condition" -> (if (isOss) condOss else condBennuoc)
     )
   }
 
