@@ -6,7 +6,6 @@ import com.typesafe.sbt.GitPlugin
 import scala.collection.immutable.Seq
 import sbt._
 import sbt.Keys._
-import sbt.plugins.JvmPlugin
 import sbtdynver.DynVerPlugin
 import xerial.sbt.Sonatype
 import xerial.sbt.Sonatype.autoImport.sonatypePublishToBundle
@@ -16,8 +15,7 @@ import scala.sys.env
 object Impl extends ImplTrait {
   val isOss = true
 
-  def requiresImpl: Plugins =
-    JvmPlugin && SbtPgp && DynVerPlugin && GitPlugin && Sonatype
+  def requiresImpl: Plugins = SbtPgp && DynVerPlugin && GitPlugin && Sonatype
 
   lazy val buildSettingsImpl: Seq[Setting[_]] = Seq(
     licenses := List(

@@ -6,14 +6,13 @@ import sbt._
 import sbt.Keys._
 import sbt.Def.Initialize
 import com.typesafe.sbt.GitPlugin
-import sbt.plugins.JvmPlugin
 import sbtdynver.DynVerPlugin
-import SdDevOpsPlugin.autoImport.sdNexusHost
+import DevopsPlugin.autoImport.sdNexusHost
 
 object Impl extends ImplTrait {
   val isOss = false
 
-  def requiresImpl: Plugins = JvmPlugin && DynVerPlugin && GitPlugin
+  def requiresImpl: Plugins = DynVerPlugin && GitPlugin
 
   val nexusRealm = "Sonatype Nexus Repository Manager"
 

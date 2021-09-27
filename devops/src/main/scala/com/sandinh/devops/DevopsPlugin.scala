@@ -26,7 +26,7 @@ import com.sandinh.devops.Utils.{
   isTag
 }
 
-object SdDevOpsPlugin extends AutoPlugin {
+object DevopsPlugin extends AutoPlugin {
   private[this] val impl: ImplTrait = Impl
   import impl._
 
