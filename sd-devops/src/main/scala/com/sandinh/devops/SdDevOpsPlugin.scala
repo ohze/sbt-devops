@@ -9,9 +9,11 @@ import sbt._
 import sbt.Keys._
 import sbt.Def.Initialize
 import sbt.io.Using
+import sbtdynver.DynVer
 import sbtdynver.DynVerPlugin.autoImport._
 
 import java.nio.file.Files
+import java.util.Date
 import scala.util.matching.Regex
 import scala.collection.JavaConverters._
 import scala.collection.immutable.Seq
@@ -43,6 +45,7 @@ object SdDevOpsPlugin extends AutoPlugin {
   override lazy val buildSettings: Seq[Setting[_]] = Seq(
     organization := "com.sandinh",
     homepage := scmInfo.value.map(_.browseUrl),
+    dynverTagPrefix := "v",
     dynverSonatypeSnapshots := true,
     scmInfo ~= {
       case Some(info) => Some(info)
@@ -97,7 +100,36 @@ object SdDevOpsPlugin extends AutoPlugin {
   )
 
   override lazy val projectSettings: Seq[Setting[_]] =
-    projectSettingsImpl
+    dynVerSettings ++ projectSettingsImpl
+
+  /** Those settings are similar to [[sbtdynver.DynVerPlugin.buildSettings]] but:
+    * + dynverSonatypeSnapshots is hardcode = true
+    * + Don't use dynverVTagPrefix.
+    *   If you don't set dynverTagPrefix then logic will be same as set dynverTagPrefix = "v"
+    * + Can be used for projectSettings
+    *   So, each project can customize version by setting dynverVTagPrefix
+    */
+  lazy val dynVerSettings: Seq[Setting[_]] = Seq(
+    version := dynverGitDescribeOutput.value.sonatypeVersionWithSep(
+      (ThisBuild / dynverCurrentDate).value,
+      (ThisBuild / dynverSeparator).value
+    ),
+    isSnapshot := dynverGitDescribeOutput.value.isSnapshot,
+    dynverInstance := DynVer(
+      Some((ThisBuild / baseDirectory).value),
+      (ThisBuild / dynverSeparator).value,
+      dynverTagPrefix.or(ThisBuild / dynverTagPrefix).value
+    ),
+    dynverGitDescribeOutput := dynverInstance.value.getGitDescribeOutput(
+      (ThisBuild / dynverCurrentDate).value
+    ),
+    dynver := dynverInstance.value.sonatypeVersion(new Date),
+    dynverCheckVersion := (dynver.value == version.value),
+    dynverAssertVersion := orBoom(
+      dynverCheckVersion.value,
+      s"Project ${name.value} define `version` manually!"
+    ),
+  )
 
   private case class Job(name: String, result: String) {
     def emoji: String = result match {
@@ -127,7 +159,11 @@ object SdDevOpsPlugin extends AutoPlugin {
 
   // https://developers.mattermost.com/integrate/incoming-webhooks/#parameters
   def sdMmNotifyTask: Initialize[Task[Unit]] = Def.task {
-    val version = (ThisBuild / Keys.version).value
+    val version = projectID
+      .all(ScopeFilter(inAnyProject))
+      .value
+      .map { m => m.name + ":" + m.revision }
+      .mkString(", ")
     val webhook = env.getOrElse(
       "MATTERMOST_WEBHOOK_URL",
       boom("MATTERMOST_WEBHOOK_URL env is not set")
