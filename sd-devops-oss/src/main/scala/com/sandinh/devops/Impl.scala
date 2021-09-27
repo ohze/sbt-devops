@@ -1,7 +1,8 @@
 package com.sandinh.devops
 
-import sbt.Keys._
+import scala.collection.immutable.Seq
 import sbt._
+import sbt.Keys._
 
 object Impl {
   lazy val buildSettings: Seq[Setting[_]] = Seq(

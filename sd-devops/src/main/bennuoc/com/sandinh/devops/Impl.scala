@@ -1,10 +1,10 @@
 package com.sandinh.devops
 
-import sys.env
+import scala.collection.immutable.Seq
+import scala.sys.env
 import sbt._
 import sbt.Keys._
 import sbtdynver.DynVerPlugin.autoImport.dynverSonatypeSnapshots
-
 import Utils.gitHubScmInfo
 
 object Impl {

@@ -12,12 +12,7 @@ import sbt.Def.Initialize
 import sbt.io.Using
 import sbt.plugins.JvmPlugin
 import sbtdynver.DynVerPlugin
-import sbtdynver.DynVerPlugin.autoImport.{
-  dynverCurrentDate,
-  dynverGitDescribeOutput,
-  dynverSeparator,
-  dynverSonatypeSnapshots
-}
+import sbtdynver.DynVerPlugin.autoImport._
 
 import java.nio.file.Files
 import scala.util.matching.Regex
@@ -34,27 +29,14 @@ object SdDevOpsPlugin extends AutoPlugin {
 
   object autoImport {
     val sdSetup = taskKey[Unit]("Setup devops stuff")
-    val sdQaVersion =
-      taskKey[Unit]("Validate that you don't define version manually")
     val sdQA = taskKey[Unit]("SanDinh QA (Quality Assurance)")
     val sdMmNotify = taskKey[Unit]("Mattermost notify")
   }
   import autoImport._
 
-  private val dynVer =
-    settingKey[String]("Version defined by DynVerPlugin.buildSettings")
-
   override lazy val buildSettings: Seq[Setting[_]] = Seq(
     organization := "com.sandinh",
     homepage := scmInfo.value.map(_.browseUrl),
-    dynVer := { // @see in DynVerPlugin.buildSettings
-      val out = dynverGitDescribeOutput.value
-      val date = dynverCurrentDate.value
-      val separator = dynverSeparator.value
-      if (dynverSonatypeSnapshots.value)
-        out.sonatypeVersionWithSep(date, separator)
-      else out.versionWithSep(date, separator)
-    },
   ) ++ Impl.buildSettings
 
   private val inAny = ScopeFilter(inAnyProject, inAnyConfiguration)
@@ -65,7 +47,7 @@ object SdDevOpsPlugin extends AutoPlugin {
       // <task>.value macro causing spurious “a pure expression does nothing” warning
       // This `val _ =` is not need if we set `pluginCrossBuild` to a newer sbt version
       val _ = sdQaBaseTask.value
-      val __ = sdQaVersion.all(ScopeFilter(inAnyProject)).value
+      val __ = dynverAssertVersion.all(ScopeFilter(inAnyProject)).value
       val fmtOk = scalafmtCheck.?.all(inAny).result.value.isSuccess
       val sbtOk = scalafmtSbtCheck.?.all(inAny).result.value.isSuccess
       orBoom(
@@ -78,9 +60,8 @@ object SdDevOpsPlugin extends AutoPlugin {
     sdMmNotify := sdMmNotifyTask.value,
   ) ++ Impl.globalSettings
 
-  override lazy val projectSettings: Seq[Setting[_]] = Seq(
-    sdQaVersion := sdQaVersionTask.value
-  ) ++ Impl.projectSettings
+  override lazy val projectSettings: Seq[Setting[_]] =
+    Impl.projectSettings
 
   private case class Job(name: String, result: String) {
     def emoji: String = result match {
@@ -110,7 +91,7 @@ object SdDevOpsPlugin extends AutoPlugin {
 
   // https://developers.mattermost.com/integrate/incoming-webhooks/#parameters
   def sdMmNotifyTask: Initialize[Task[Unit]] = Def.task {
-    val version = (ThisBuild / dynVer).value
+    val version = (ThisBuild / Keys.version).value
     val webhook = env.getOrElse(
       "MATTERMOST_WEBHOOK_URL",
       boom("MATTERMOST_WEBHOOK_URL env is not set")
@@ -283,12 +264,6 @@ object SdDevOpsPlugin extends AutoPlugin {
 
     val f = baseDir / "README.md"
     orBoom(f.isFile, "You should create README.md by running sbt sdSetup")
-  }
-
-  def sdQaVersionTask: Initialize[Task[Unit]] = Def.task {
-    val v = version.value
-    val dv = (ThisBuild / dynVer).value
-    orBoom(v == dv, s"Project ${name.value} define `version` manually!")
   }
 
   private def validatePluginsSbt(baseDir: File): Unit = {
