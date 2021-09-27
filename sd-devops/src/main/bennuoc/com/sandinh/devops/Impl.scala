@@ -4,9 +4,11 @@ import scala.collection.immutable.Seq
 import scala.sys.env
 import sbt._
 import sbt.Keys._
+import sbt.Def.Initialize
 import com.typesafe.sbt.GitPlugin
 import sbt.plugins.JvmPlugin
 import sbtdynver.DynVerPlugin
+import SdDevOpsPlugin.autoImport.sdNexusHost
 
 object Impl extends ImplTrait {
   val isOss = false
@@ -14,11 +16,13 @@ object Impl extends ImplTrait {
   def requiresImpl: Plugins = JvmPlugin && DynVerPlugin && GitPlugin
 
   val nexusRealm = "Sonatype Nexus Repository Manager"
-  val bennuoc = "repo.bennuoc.com"
-  val bennuocMaven = s"https://$bennuoc/repository/maven"
+
+  def nexusRepo(tpe: String): Initialize[String] = sdNexusHost { host =>
+    s"https://$host/repository/maven"
+  }
 
   lazy val buildSettingsImpl: Seq[Setting[_]] = Seq(
-    resolvers += "bennuoc" at s"$bennuocMaven-public",
+    resolvers += "sdNexus" at nexusRepo("public").value,
   )
 
   lazy val globalSettingsImpl: Seq[Setting[_]] = Seq(
@@ -26,14 +30,14 @@ object Impl extends ImplTrait {
       for {
         u <- env.get("NEXUS_USER")
         p <- env.get("NEXUS_PASS")
-      } yield Credentials(nexusRealm, bennuoc, u, p)
+      } yield Credentials(nexusRealm, sdNexusHost.value, u, p)
     },
   )
 
   lazy val projectSettingsImpl: Seq[Setting[_]] = Seq(
     publishTo := {
       val tpe = if (isSnapshot.value) "snapshots" else "releases"
-      Some(tpe at s"$bennuocMaven-$tpe")
+      Some(tpe at nexusRepo(tpe).value)
     },
   )
 

@@ -39,6 +39,9 @@ object SdDevOpsPlugin extends AutoPlugin {
     val sdSetup = taskKey[Unit]("Setup devops stuff")
     val sdQA = taskKey[Unit]("SanDinh QA (Quality Assurance)")
     val sdMmNotify = taskKey[Unit]("Mattermost notify")
+    val sdNexusHost = settingKey[String](
+      "Your private nexus host, ex repo.example.com. Not used in sd-devops-oss"
+    )
   }
   import autoImport._
 
