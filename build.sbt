@@ -57,9 +57,21 @@ inThisBuild(
   )
 )
 
+// for sandinh only
+def sandinhPrj(id: String) = Project(id, file("sd"))
+  .enablePlugins(SbtPlugin)
+  .settings(
+    pluginCrossBuild / sbtVersion := "1.5.5",
+    dynverTagPrefix := "sd",
+    addSbtPlugin("com.eed3si9n" % "sbt-projectmatrix" % "0.8.0"),
+    target := target.value / id,
+  )
+
+lazy val sd = sandinhPrj("sd-devops").dependsOn(devops)
+
+lazy val sdOss = sandinhPrj("sd-devops-oss").dependsOn(devopsOss)
+
 lazy val `sbt-devops-root` = project
   .in(file("."))
-  .settings(
-    publish / skip := true
-  )
-  .aggregate(devops, devopsOss)
+  .settings(skipPublish)
+  .aggregate(devops, devopsOss, sd, sdOss)

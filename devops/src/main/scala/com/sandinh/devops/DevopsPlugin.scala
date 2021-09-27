@@ -46,7 +46,6 @@ object DevopsPlugin extends AutoPlugin {
   import autoImport._
 
   override lazy val buildSettings: Seq[Setting[_]] = Seq(
-    organization := "com.sandinh",
     homepage := scmInfo.value.map(_.browseUrl),
     dynverTagPrefix := "v",
     dynverSonatypeSnapshots := true,
