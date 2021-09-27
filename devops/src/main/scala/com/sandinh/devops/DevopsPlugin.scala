@@ -18,13 +18,7 @@ import scala.util.matching.Regex
 import scala.collection.JavaConverters._
 import scala.collection.immutable.Seq
 import scala.sys.env
-
-import com.sandinh.devops.Utils.{
-  currentBranch,
-  gitHubScmInfo,
-  isSnapshotVersion,
-  isTag
-}
+import Utils.{gitHubScmInfo, isSnapshotVersion, isTag}
 
 object DevopsPlugin extends AutoPlugin {
   private[this] val impl: ImplTrait = Impl
@@ -81,7 +75,7 @@ object DevopsPlugin extends AutoPlugin {
     Test / publishArtifact := false,
     publishMavenStyle := true,
     commands += Command.command("ci-release") { state =>
-      println(s"Running ci-release.\n  branch=$currentBranch")
+      println(s"Running ci-release.\n  branch=${env.get("GITHUB_REF")}")
       if (!isTag) {
         if (isSnapshotVersion(state)) {
           println(s"No tag push, publishing SNAPSHOT")
@@ -263,7 +257,9 @@ object DevopsPlugin extends AutoPlugin {
   }
 
   private def setupFiles(baseDir: File, log: Logger): Unit = {
-    val baseUrl = "https://raw.githubusercontent.com/ohze/sbt-devops/main"
+    // workaround for `scripted all/setup` sbt-test when test on branch != main
+    val branch = sys.props.getOrElse("devops.branch", "main")
+    val baseUrl = s"https://raw.githubusercontent.com/ohze/sbt-devops/$branch"
 
     def fetch(filename: String, toDir: String)(
         linesTransformer: Seq[String] => Seq[String]

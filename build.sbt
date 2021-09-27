@@ -1,6 +1,11 @@
+import com.sandinh.devops.Utils.currentBranch
+
 lazy val pluginSettings = Seq(
   pluginCrossBuild / sbtVersion := "1.3.13", // minimum sbt version
-  scriptedLaunchOpts += "-Xmx1024M",
+  scriptedLaunchOpts ++= Seq(
+    "-Xmx1024M",
+    "-Ddevops.branch=" + currentBranch.get,
+  ),
   scripted := scripted.dependsOn(scriptedPrepare).evaluated,
 )
 

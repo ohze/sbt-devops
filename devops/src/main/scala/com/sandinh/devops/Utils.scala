@@ -3,6 +3,7 @@ package com.sandinh.devops
 import sbt.Keys.version
 import sbt.{Project, ScmInfo, State, ThisBuild, url}
 import scala.sys.env
+import scala.sys.process._
 import scala.util.Try
 
 object Utils {
@@ -17,7 +18,6 @@ object Utils {
     gitHubInfo.map { case (user, repo) => gitHubScmInfo(user, repo) }
 
   def gitHubInfo: Option[(String, String)] = {
-    import scala.sys.process._
     val identifier = """([^\/]+?)"""
     val GitHubHttps = s"https://github.com/$identifier/$identifier(?:\\.git)?".r
     val GitHubGit = s"git://github.com:$identifier/$identifier(?:\\.git)?".r
@@ -32,7 +32,9 @@ object Utils {
     }
   }
 
-  def currentBranch: String = env.getOrElse("GITHUB_REF", "<unknown>")
+  def currentBranch: Try[String] = Try {
+    "git rev-parse --abbrev-ref HEAD".!!.trim()
+  }
 
   def isTag: Boolean = env.get("GITHUB_REF").exists(_.startsWith("refs/tags"))
 
