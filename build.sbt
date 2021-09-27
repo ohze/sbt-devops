@@ -46,6 +46,15 @@ lazy val devopsOss = Project("sbt-devops-oss", file("devops-oss"))
     addSbtPlugin("org.xerial.sbt" % "sbt-sonatype" % "3.9.10"),
     addSbtPlugin("com.github.sbt" % "sbt-pgp" % "2.1.2"),
     Compile / unmanagedSourceDirectories += (devops / Compile / scalaSource).value,
+    scripted := scripted
+      .dependsOn(Def.task {
+        IO.copyDirectory(
+          (devops / sbtTestDirectory).value,
+          target.value / "sbt-test"
+        )
+      })
+      .evaluated,
+    sbtTestDirectory := target.value / "sbt-test",
   )
 
 inThisBuild(
