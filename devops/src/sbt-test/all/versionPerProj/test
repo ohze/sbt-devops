@@ -1,5 +1,7 @@
 > dynverAssertVersion
 $ exec git init
+$ exec git config user.email "thanbv@sandinh.net"
+$ exec git config user.name "Bui Viet Thanh"
 $ exec git add build.sbt
 $ exec git commit -m "init"
 $ exec git tag v1.1

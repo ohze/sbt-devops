@@ -1,11 +1,14 @@
 > devopsSetup
 -> devopsQA
 > scalafmtSbt
+> reload
 > devopsQA
 $ exists README.md
 $ delete README.md
 -> devopsQA
 $ exec git init
+$ exec git config user.email "thanbv@sandinh.net"
+$ exec git config user.name "Bui Viet Thanh"
 $ exec git remote add origin https://github.com/user/repo1.git
 > readme1
 -> check1Fail
