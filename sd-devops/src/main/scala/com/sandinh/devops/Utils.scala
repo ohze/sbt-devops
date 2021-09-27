@@ -1,7 +1,8 @@
 package com.sandinh.devops
 
-import sbt.{ScmInfo, url}
-
+import sbt.Keys.version
+import sbt.{Project, ScmInfo, State, ThisBuild, url}
+import scala.sys.env
 import scala.util.Try
 
 object Utils {
@@ -28,6 +29,17 @@ object Utils {
       case GitHubGit(user, repo)   => Some(user -> repo)
       case GitHubSsh(user, repo)   => Some(user -> repo)
       case _                       => None
+    }
+  }
+
+  def currentBranch: String = env.getOrElse("GITHUB_REF", "<unknown>")
+
+  def isTag: Boolean = env.get("GITHUB_REF").exists(_.startsWith("refs/tags"))
+
+  def isSnapshotVersion(state: State): Boolean = {
+    (ThisBuild / version).get(Project.extract(state).structure.data) match {
+      case Some(v) => v.endsWith("-SNAPSHOT")
+      case None    => throw new NoSuchFieldError("version")
     }
   }
 }

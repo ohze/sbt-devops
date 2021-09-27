@@ -1,7 +1,6 @@
 package com.sandinh.devops
 
 import com.typesafe.config.ConfigFactory
-import com.typesafe.sbt.GitPlugin
 import org.scalafmt.sbt.ScalafmtPlugin.autoImport.{
   scalafmtCheck,
   scalafmtSbtCheck
@@ -10,8 +9,6 @@ import sbt._
 import sbt.Keys._
 import sbt.Def.Initialize
 import sbt.io.Using
-import sbt.plugins.JvmPlugin
-import sbtdynver.DynVerPlugin
 import sbtdynver.DynVerPlugin.autoImport._
 
 import java.nio.file.Files
@@ -19,11 +16,20 @@ import scala.util.matching.Regex
 import scala.collection.JavaConverters._
 import scala.collection.immutable.Seq
 import scala.sys.env
-import Impl.isOss
+
+import com.sandinh.devops.Utils.{
+  currentBranch,
+  gitHubScmInfo,
+  isSnapshotVersion,
+  isTag
+}
 
 object SdDevOpsPlugin extends AutoPlugin {
+  private[this] val impl: ImplTrait = Impl
+  import impl._
+
   override def trigger = allRequirements
-  override def requires = JvmPlugin && DynVerPlugin && GitPlugin
+  override def requires = requiresImpl
 
   val scalafmtVersion = "3.0.4"
 
@@ -37,7 +43,12 @@ object SdDevOpsPlugin extends AutoPlugin {
   override lazy val buildSettings: Seq[Setting[_]] = Seq(
     organization := "com.sandinh",
     homepage := scmInfo.value.map(_.browseUrl),
-  ) ++ Impl.buildSettings
+    dynverSonatypeSnapshots := true,
+    scmInfo ~= {
+      case Some(info) => Some(info)
+      case None       => gitHubScmInfo
+    },
+  ) ++ buildSettingsImpl
 
   private val inAny = ScopeFilter(inAnyProject, inAnyConfiguration)
 
@@ -58,10 +69,35 @@ object SdDevOpsPlugin extends AutoPlugin {
       )
     },
     sdMmNotify := sdMmNotifyTask.value,
-  ) ++ Impl.globalSettings
+  ) ++ ciReleaseSettings ++ globalSettingsImpl
+
+  // see CiReleasePlugin.globalSettings
+  lazy val ciReleaseSettings: Seq[Setting[_]] = Seq(
+    Test / publishArtifact := false,
+    publishMavenStyle := true,
+    commands += Command.command("ci-release") { state =>
+      println(s"Running ci-release.\n  branch=$currentBranch")
+      if (!isTag) {
+        if (isSnapshotVersion(state)) {
+          println(s"No tag push, publishing SNAPSHOT")
+          ciReleaseSnapshotCmds ::: state
+        } else {
+          // Happens when a tag is pushed right after merge causing the master branch
+          // job to pick up a non-SNAPSHOT version even if isTag=false.
+          println(
+            "Snapshot releases must have -SNAPSHOT version number, doing nothing"
+          )
+          state
+        }
+      } else {
+        println("Tag push detected, publishing a stable release")
+        ciReleaseCmds ::: state
+      }
+    },
+  )
 
   override lazy val projectSettings: Seq[Setting[_]] =
-    Impl.projectSettings
+    projectSettingsImpl
 
   private case class Job(name: String, result: String) {
     def emoji: String = result match {
