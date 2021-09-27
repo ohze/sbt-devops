@@ -15,7 +15,7 @@ jobs:
           distribution: 'temurin'
       - uses: coursier/cache-action@v6
       - run: sbt ++${{ matrix.scala }} devopsQA test
-        # env: bennuoc
+        # env: nexus
       # https://www.scala-sbt.org/1.x/docs/GitHub-Actions-with-sbt.html#Caching
       - run: |
           rm -rf "$HOME/.ivy2/local" || true

@@ -237,11 +237,11 @@ object DevopsPlugin extends AutoPlugin {
         |  #CI_RELEASE: '+publishSigned'
         |  #CI_SONATYPE_RELEASE: 'sonatypeBundleRelease'
         |  #CI_SNAPSHOT_RELEASE: '+publish'""".stripMargin.linesIterator.toList
-    val envBennuoc =
+    val envNexus =
       """env:
         |  NEXUS_USER: ${{ secrets.NEXUS_USER }}
         |  NEXUS_PASS: ${{ secrets.NEXUS_PASS }}""".stripMargin.linesIterator.toList
-    def envReleaseBennuoc = envBennuoc ++
+    def envReleaseNexus = envNexus ++
       """  # optional
         |  #CI_CLEAN: 'clean'
         |  #CI_RELEASE: '+publish'
@@ -254,12 +254,12 @@ object DevopsPlugin extends AutoPlugin {
         |  (github.ref == 'refs/heads/main' ||
         |    github.ref == 'refs/heads/master' ||
         |    startsWith(github.ref, 'refs/tags/'))""".stripMargin.linesIterator.toList
-    def condBennuoc = Seq("if: success()")
+    def condNexus = Seq("if: success()")
 
     Map(
-      "# env: bennuoc" -> (if (isOss) Nil else envBennuoc),
-      "# env: ci-release" -> (if (isOss) envReleaseOss else envReleaseBennuoc),
-      "# if: publish-condition" -> (if (isOss) condOss else condBennuoc)
+      "# env: nexus" -> (if (isOss) Nil else envNexus),
+      "# env: ci-release" -> (if (isOss) envReleaseOss else envReleaseNexus),
+      "# if: publish-condition" -> (if (isOss) condOss else condNexus)
     )
   }
 

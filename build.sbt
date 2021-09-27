@@ -31,7 +31,7 @@ lazy val devops = Project("sbt-devops", file("devops"))
   .enablePlugins(SbtPlugin)
   .settings(pluginSettings ++ commonDeps)
   .settings(
-    Compile / unmanagedSourceDirectories += (Compile / scalaSource).value.getParentFile / "bennuoc",
+    Compile / unmanagedSourceDirectories += (Compile / scalaSource).value.getParentFile / "nexus",
   )
 
 lazy val devopsOss = Project("sbt-devops-oss", file("devops-oss"))
