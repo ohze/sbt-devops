@@ -8,11 +8,12 @@ TaskKey[Unit]("check1Fail") := {
   assertNoDiff(IO.read((ThisBuild / baseDirectory).value / "README.md"), "# repo-diff")
 }
 
+val ymlUrl = "https://github.com/user/repo1/actions/workflows/sbt-devops.yml"
 TaskKey[Unit]("check1") := {
   assertNoDiff(IO.read((ThisBuild / baseDirectory).value / "README.md"),
-    """# repo
+    s"""# repo
       |
-      |[![CI](https://github.com/user/repo1/actions/workflows/sd-devops.yml/badge.svg)](https://github.com/user/repo1/actions/workflows/sd-devops.yml)
+      |[![CI]($ymlUrl/badge.svg)]($ymlUrl)
       |""".stripMargin, "Invalid README.md")
 }
 
@@ -26,12 +27,11 @@ TaskKey[Unit]("readme2") := {
 
 TaskKey[Unit]("check2") := {
   assertNoDiff(IO.read((ThisBuild / baseDirectory).value / "README.md"),
-    """repo-2
+    s"""repo-2
       |======
       |
-      |[![CI](https://github.com/user/repo1/actions/workflows/sd-devops.yml/badge.svg)](https://github.com/user/repo1/actions/workflows/sd-devops.yml)
+      |[![CI]($ymlUrl/badge.svg)]($ymlUrl)
       |
       |[![CI](h
       |""".stripMargin, "Invalid README.md")
 }
-

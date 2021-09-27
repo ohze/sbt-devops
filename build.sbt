@@ -1,5 +1,5 @@
 lazy val pluginSettings = Seq(
-  pluginCrossBuild / sbtVersion := "1.3.13", // set minimum sbt version
+  pluginCrossBuild / sbtVersion := "1.3.13", // minimum sbt version
   scriptedLaunchOpts += "-Xmx1024M",
   scripted := scripted.dependsOn(scriptedPrepare).evaluated,
 )
@@ -27,20 +27,20 @@ lazy val commonDeps = Seq(
   )
 )
 
-lazy val `sd-devops` = project
+lazy val devops = Project("sbt-devops", file("devops"))
   .enablePlugins(SbtPlugin)
   .settings(pluginSettings ++ commonDeps)
   .settings(
     Compile / unmanagedSourceDirectories += (Compile / scalaSource).value.getParentFile / "bennuoc",
   )
 
-lazy val `sd-devops-oss` = project
+lazy val devopsOss = Project("sbt-devops-oss", file("devops-oss"))
   .enablePlugins(SbtPlugin)
   .settings(pluginSettings ++ commonDeps)
   .settings(
     addSbtPlugin("org.xerial.sbt" % "sbt-sonatype" % "3.9.10"),
     addSbtPlugin("com.github.sbt" % "sbt-pgp" % "2.1.2"),
-    Compile / unmanagedSourceDirectories += (`sd-devops` / Compile / scalaSource).value,
+    Compile / unmanagedSourceDirectories += (devops / Compile / scalaSource).value,
   )
 
 inThisBuild(
@@ -57,9 +57,9 @@ inThisBuild(
   )
 )
 
-lazy val `sd-devops-root` = project
+lazy val `sbt-devops-root` = project
   .in(file("."))
   .settings(
     publish / skip := true
   )
-  .aggregate(`sd-devops`, `sd-devops-oss`)
+  .aggregate(devops, devopsOss)

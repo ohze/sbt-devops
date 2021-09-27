@@ -1,8 +1,8 @@
-# sd-devops
+# sbt-devops
 
-[![CI](https://github.com/ohze/sd-devops/actions/workflows/sd-devops.yml/badge.svg)](https://github.com/ohze/sd-devops/actions/workflows/sd-devops.yml)
+[![CI](https://github.com/ohze/sbt-devops/actions/workflows/sbt-devops.yml/badge.svg)](https://github.com/ohze/sbt-devops/actions/workflows/sbt-devops.yml)
 
-#### Sân Đình devops automator for scala projects
+#### devops automator for scala/sbt projects
 This is a sbt AutoPlugin that do 4 things:
 
 #### 1. `sdSetup` task:
@@ -39,26 +39,26 @@ This is a sbt AutoPlugin that do 4 things:
 Add to `project/plugins.sbt`
 + For private projects that will be published to repo.bennuoc.com
 ```sbt
-addSbtPlugin("com.sandinh" % "sd-devops" % "<version>")
+addSbtPlugin("com.sandinh" % "sbt-devops" % "<version>")
 ```
 + For oss projects that will be publish to sonatype oss
 ```sbt
-addSbtPlugin("com.sandinh" % "sd-devops-oss" % "<version>")
+addSbtPlugin("com.sandinh" % "sbt-devops-oss" % "<version>")
 ```
 
 ## Usage
 1. install (see above) -> run `sbt sdSetup`
-2. (optional) remove some sbt settings that have been defined by sd-devops such as `publishTo`,.. see above.
+2. (optional) remove some sbt settings that have been defined by sbt-devops such as `publishTo`,.. see above.
 3. run `sbt +sdQA`
 4. To auto release, you need manually setup secrets in your github repo setting:  
    `Your github repo -> Settings -> Secrets -> New repository secret`
-+ sd-devops (private repo)
++ sbt-devops (private repo)
   - `NEXUS_USER`, `NEXUS_PASS`: Your username/ password in bennuoc
-+ sd-devops-oss
++ sbt-devops-oss
   - `SONATYPE_USERNAME, SONATYPE_PASSWORD`: Your username/ password in sonatype oss
   - `PGP_SECRET, PGP_PASSPHRASE`: See sbt-ci-release's [guide](https://github.com/olafurpg/sbt-ci-release#gpg)
 6. secrets need to notify mattermost:
   - `MATTERMOST_WEBHOOK_URL`
-7. (optional) customize `.scalafmt.conf, .github/workflows/sd-devops.yml`
+7. (optional) customize `.scalafmt.conf, .github/workflows/sbt-devops.yml`
 8. Commit changes, push -> auto publish SNAPSHOT. Push tag -> auto publish release version.
 9. Enjoy

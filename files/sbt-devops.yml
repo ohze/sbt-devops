@@ -1,4 +1,4 @@
-name: sd-devops
+name: sbt-devops
 on: [push, pull_request]
 jobs:
   build:

@@ -40,7 +40,7 @@ object SdDevOpsPlugin extends AutoPlugin {
     val sdQA = taskKey[Unit]("SanDinh QA (Quality Assurance)")
     val sdMmNotify = taskKey[Unit]("Mattermost notify")
     val sdNexusHost = settingKey[String](
-      "Your private nexus host, ex repo.example.com. Not used in sd-devops-oss"
+      "Your private nexus host, ex repo.example.com. Not used in devops-oss"
     )
   }
   import autoImport._
@@ -265,7 +265,7 @@ object SdDevOpsPlugin extends AutoPlugin {
   }
 
   private def setupFiles(baseDir: File, log: Logger): Unit = {
-    val baseUrl = "https://raw.githubusercontent.com/ohze/sd-devops/main"
+    val baseUrl = "https://raw.githubusercontent.com/ohze/sbt-devops/main"
 
     def fetch(filename: String, toDir: String)(
         linesTransformer: Seq[String] => Seq[String]
@@ -284,7 +284,7 @@ object SdDevOpsPlugin extends AutoPlugin {
 
     fetch(".scalafmt.conf", "")(identity)
 
-    fetch("sd-devops.yml", ".github/workflows")(_.flatMap { line =>
+    fetch("sbt-devops.yml", ".github/workflows")(_.flatMap { line =>
       ymlReplace.get(line.trim) match {
         case None => Seq(line)
         case Some(replace) =>
@@ -295,7 +295,7 @@ object SdDevOpsPlugin extends AutoPlugin {
   }
 
   private def badge(user: String, repo: String) = {
-    val url = s"https://github.com/$user/$repo/actions/workflows/sd-devops.yml"
+    val url = s"https://github.com/$user/$repo/actions/workflows/sbt-devops.yml"
     s"[![CI]($url/badge.svg)]($url)"
   }
 
@@ -355,7 +355,10 @@ object SdDevOpsPlugin extends AutoPlugin {
     def check(plugin: String): Unit =
       orBoom(!has(plugin), s"You should remove $plugin from $f")
 
-    (has("sd-devops-oss"), has("sd-devops")) match {
+    (
+      has("sbt-devops-oss") || has("sd-devops-oss"),
+      has("sbt-devops") || has("sd-devops")
+    ) match {
       case (false, false) => // do nothing
       case (isOss, _) =>
         Seq("sbt-dynver", "sbt-git", "sbt-scalafmt").foreach(check)
@@ -373,7 +376,7 @@ object SdDevOpsPlugin extends AutoPlugin {
   }
 
   def validateGithubCI(baseDir: File): Unit = {
-    val f = baseDir / ".github" / "workflows" / "sd-devops.yml"
+    val f = baseDir / ".github" / "workflows" / "sbt-devops.yml"
     orBoom(f.isFile, s"$f: File not found!")
     orBoom(
       IO.readLines(f).exists(isSdQAStep),

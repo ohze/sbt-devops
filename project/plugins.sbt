@@ -1,6 +1,6 @@
 Compile / unmanagedSourceDirectories ++= {
   val base = (ThisBuild / baseDirectory).value.getParentFile
-  Seq("sd-devops", "sd-devops-oss").map { d =>
+  Seq("devops", "devops-oss").map { d =>
     base / d / "src" / "main" / "scala"
   }
 }
