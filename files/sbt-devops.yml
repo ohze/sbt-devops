@@ -1,3 +1,4 @@
+# @see https://github.com/ohze/sbt-devops/blob/main/files/sbt-devops.yml
 name: sbt-devops
 on: [push, pull_request]
 jobs:
@@ -40,7 +41,7 @@ jobs:
       - run: sbt ci-release
         # env: ci-release
 
-  mattermost:
+  notify:
     needs: [build, publish]
     if: always()
     runs-on: ubuntu-latest
@@ -49,12 +50,14 @@ jobs:
         with:
           fetch-depth: 0
       - uses: coursier/cache-action@v6
-      - run: sbt devopsMattermost
+      - run: sbt devopsNotify
         env:
-          SD_MM_NEEDS: ${{ toJSON(needs) }}
+          # You can use `DEVOPS_` | `SLACK_` prefix for `MATTERMOST_*` envs below
+          # ex SLACK_WEBHOOK_URL instead of MATTERMOST_WEBHOOK_URL
           MATTERMOST_WEBHOOK_URL: ${{ secrets.MATTERMOST_WEBHOOK_URL }}
           # optional. See https://developers.mattermost.com/integrate/incoming-webhooks/#parameters
-          #MATTERMOST_PRETEXT: Message shown above the CI status attachment, ex to mention some user. Default empty.
           #MATTERMOST_ICON: icon_url or icon_emoji
           #MATTERMOST_CHANNEL: use default of the webhook if not set
           #MATTERMOST_USERNAME: use default of the webhook if not set
+          #MATTERMOST_PRETEXT: Message shown above the CI status attachment, ex to mention some user. Default empty.
+          _DEVOPS_NEEDS: ${{ toJSON(needs) }}

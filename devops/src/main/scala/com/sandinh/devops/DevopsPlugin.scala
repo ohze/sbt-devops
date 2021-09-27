@@ -38,7 +38,7 @@ object DevopsPlugin extends AutoPlugin {
   object autoImport {
     val devopsSetup = taskKey[Unit]("Setup devops stuff")
     val devopsQA = taskKey[Unit]("QA (Quality Assurance)")
-    val devopsMattermost = taskKey[Unit]("Mattermost notify")
+    val devopsNotify = taskKey[Unit]("Mattermost/ Slack notify")
     val devopsNexusHost = settingKey[String](
       "Your private nexus host, ex repo.example.com. Not used in devops-oss"
     )
@@ -73,7 +73,7 @@ object DevopsPlugin extends AutoPlugin {
           |RECOMMEND: git commit or stash all changes before formatting.""".stripMargin
       )
     },
-    devopsMattermost := sdMmNotifyTask.value,
+    devopsNotify := sdMmNotifyTask.value,
   ) ++ ciReleaseSettings ++ globalSettingsImpl
 
   // see CiReleasePlugin.globalSettings
@@ -166,18 +166,17 @@ object DevopsPlugin extends AutoPlugin {
       .value
       .map { m => m.name + ":" + m.revision }
       .mkString(", ")
-    val webhook = env.getOrElse(
-      "MATTERMOST_WEBHOOK_URL",
-      boom("MATTERMOST_WEBHOOK_URL env is not set")
-    )
+    val webhook = env
+      .any("WEBHOOK_URL")
+      .getOrElse(boom(s"None of ${envKeys("WEBHOOK_URL")} env is set"))
     val runId = env.getOrElse(
       "GITHUB_RUN_ID",
-      boom("devopsMattermost task must be run in Github Action")
+      boom("devopsNotify task must be run in Github Action")
     )
     val home = s"${env("GITHUB_SERVER_URL")}/${env("GITHUB_REPOSITORY")}"
     val link = s"$home/actions/runs/$runId"
     val jobs = for {
-      v <- env.get("SD_MM_NEEDS").toSeq
+      v <- env.get("_DEVOPS_NEEDS").toSeq
       (jobName, job) <- ujson.read(v).obj
     } yield Job(jobName, job.obj("result").str)
 
@@ -195,24 +194,24 @@ object DevopsPlugin extends AutoPlugin {
       "text" -> s"[CI jobs status]($link) for $text",
       "fields" -> jobs.map(_.asAttachmentField(version)),
     )
-    env.get("MATTERMOST_PRETEXT").foreach(attachment("pretext") = _)
+    env.any("PRETEXT").foreach(attachment("pretext") = _)
 
     val data = ujson.Obj("attachments" -> ujson.Arr(attachment))
 
     val urlPattern = "https?://.*".r
-    env.get("MATTERMOST_ICON") match {
+    env.any("ICON") match {
       case Some(url @ urlPattern()) => data("icon_url") = url
       case Some(emoji)              => data("icon_emoji") = emoji
       case None => data("icon_emoji") = ":electric_plug:" // ":dizzy:"
     }
 
     for {
-      (key, field) <- Seq(
-        "MATTERMOST_CHANNEL" -> "channel",
-        "MATTERMOST_USERNAME" -> "username",
+      (keySuffix, field) <- Seq(
+        "CHANNEL" -> "channel",
+        "USERNAME" -> "username",
       )
-      v <- env.get(key)
-    } data(field) = v
+      value <- env.any(keySuffix)
+    } data(field) = value
 
     requests.post(webhook, data = data)
   }
@@ -404,5 +403,13 @@ object DevopsPlugin extends AutoPlugin {
       case Value(_) => true
       case Inc(_)   => false
     }
+  }
+
+  private def envKeys(suffix: String): Seq[String] =
+    Seq("MATTERMOST_", "SLACK_", "DEVOPS_").map(_ + suffix)
+
+  private implicit class EnvOps(val m: Map[String, String]) extends AnyVal {
+    def any(keySuffix: String): Option[String] =
+      envKeys(keySuffix).flatMap(m.get).headOption
   }
 }

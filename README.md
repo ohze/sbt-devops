@@ -12,11 +12,11 @@ This is a sbt AutoPlugin that do 4 things:
   - QA (Quality Assurance) check by running `sbt test devopsQA`
   - Auto release when you push code to github
     * Release to maven central (sonatype oss) if your project is open source
-    * Release to bennuoc if your project is private
+    * Release to your private nexus repository if your project is private
     * Release to `releases` maven if you push a git tag
     * Release to `snapshots` maven otherwise
   - notify to mattermost when the CI jobs completed
-+ Setup other things such as add a badge to README.md,..
++ Setup other things such as adding a badge to README.md,..
 
 #### 2. `devopsQA` task validate that
 + You have setup CI, scalafmt
@@ -24,12 +24,14 @@ This is a sbt AutoPlugin that do 4 things:
 + You don't define version manually
 + ... see source code for more detail
 
-#### 3. `devopsMattermost` task
+#### 3. `devopsNotify` task
++ Notify your [Mattermost](https://mattermost.com/) or Slack webhook when CI jobs done
++ The message also contains jobs info such as status, published version, link to job,
+  optional mentions like @channel, @here, @some_user
 
 #### 4. Auto add some sbt settings such as
 + `version`: Auto get from git
-+ `resolvers += bennuoc`
-+ `organization := "com.sandinh"`
++ `resolvers += your private repository` (unless using `sbt-devops`**-oss**)
 + `publishMavenStyle := true`
 + `scmInfo`, `homepage`, `publishTo`, `publishMavenStyle`, `credentials`,..
   See source code for more detail.
@@ -45,20 +47,25 @@ addSbtPlugin("com.sandinh" % "sbt-devops" % "<version>")
 ```sbt
 addSbtPlugin("com.sandinh" % "sbt-devops-oss" % "<version>")
 ```
+See [releases](/ohze/sbt-devops/releases) for available `<version>`s.
+Release with tag `vM.N.P` => version `M.N.P`, ex `v3.0.0` => version `3.0.0`
 
 ## Usage
 1. install (see above) -> run `sbt devopsSetup`
 2. (optional) remove some sbt settings that have been defined by sbt-devops such as `publishTo`,.. see above.
 3. run `sbt +devopsQA`
-4. To auto release, you need manually setup secrets in your github repo setting:  
+4. If you use private maven hosting with `sbt-devops` then add this to `build.sbt`:
+    Global / devopsNexusHost := "<your repo, ex repo.example.com>"
+5. To auto release, you need manually setup secrets in your github repo setting:  
    `Your github repo -> Settings -> Secrets -> New repository secret`
-+ sbt-devops (private repo)
-  - `NEXUS_USER`, `NEXUS_PASS`: Your username/ password in bennuoc
++ sbt-devops (private maven repository)
+  - `NEXUS_USER`, `NEXUS_PASS`: Your username/ password in `devopsNexusHost`
 + sbt-devops-oss
   - `SONATYPE_USERNAME, SONATYPE_PASSWORD`: Your username/ password in sonatype oss
   - `PGP_SECRET, PGP_PASSPHRASE`: See sbt-ci-release's [guide](https://github.com/olafurpg/sbt-ci-release#gpg)
-6. secrets need to notify mattermost:
+6. secrets need to notify mattermost/ slack:
   - `MATTERMOST_WEBHOOK_URL`
+  See [files/sbt-devops.yml](files/sbt-devops.yml) for details and how to customize message, icon, channel,..
 7. (optional) customize `.scalafmt.conf, .github/workflows/sbt-devops.yml`
 8. Commit changes, push -> auto publish SNAPSHOT. Push tag -> auto publish release version.
 9. Enjoy
