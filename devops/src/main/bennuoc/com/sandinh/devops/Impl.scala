@@ -4,7 +4,6 @@ import scala.collection.immutable.Seq
 import scala.sys.env
 import sbt._
 import sbt.Keys._
-import sbt.Def.Initialize
 import com.typesafe.sbt.GitPlugin
 import sbtdynver.DynVerPlugin
 import DevopsPlugin.autoImport.sdNexusHost
@@ -16,12 +15,11 @@ object Impl extends ImplTrait {
 
   val nexusRealm = "Sonatype Nexus Repository Manager"
 
-  def nexusRepo(tpe: String): Initialize[String] = sdNexusHost { host =>
-    s"https://$host/repository/maven"
-  }
+  private def repo(host: String, tpe: String) =
+    "nexus" at s"https://$host/repository/maven$tpe"
 
   lazy val buildSettingsImpl: Seq[Setting[_]] = Seq(
-    resolvers += "sdNexus" at nexusRepo("public").value,
+    resolvers += repo(sdNexusHost.value, "public"),
   )
 
   lazy val globalSettingsImpl: Seq[Setting[_]] = Seq(
@@ -36,7 +34,7 @@ object Impl extends ImplTrait {
   lazy val projectSettingsImpl: Seq[Setting[_]] = Seq(
     publishTo := {
       val tpe = if (isSnapshot.value) "snapshots" else "releases"
-      Some(tpe at nexusRepo(tpe).value)
+      Some(repo(sdNexusHost.value, tpe))
     },
   )
 
