@@ -6,7 +6,7 @@ import sbt._
 import sbt.Keys._
 import com.typesafe.sbt.GitPlugin
 import sbtdynver.DynVerPlugin
-import DevopsPlugin.autoImport.sdNexusHost
+import DevopsPlugin.autoImport.devopsNexusHost
 
 object Impl extends ImplTrait {
   val isOss = false
@@ -19,7 +19,7 @@ object Impl extends ImplTrait {
     "nexus" at s"https://$host/repository/maven$tpe"
 
   lazy val buildSettingsImpl: Seq[Setting[_]] = Seq(
-    resolvers += repo(sdNexusHost.value, "public"),
+    resolvers += repo(devopsNexusHost.value, "public"),
   )
 
   lazy val globalSettingsImpl: Seq[Setting[_]] = Seq(
@@ -27,14 +27,14 @@ object Impl extends ImplTrait {
       for {
         u <- env.get("NEXUS_USER")
         p <- env.get("NEXUS_PASS")
-      } yield Credentials(nexusRealm, sdNexusHost.value, u, p)
+      } yield Credentials(nexusRealm, devopsNexusHost.value, u, p)
     },
   )
 
   lazy val projectSettingsImpl: Seq[Setting[_]] = Seq(
     publishTo := {
       val tpe = if (isSnapshot.value) "snapshots" else "releases"
-      Some(repo(sdNexusHost.value, tpe))
+      Some(repo(devopsNexusHost.value, tpe))
     },
   )
 

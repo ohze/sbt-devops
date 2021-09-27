@@ -36,10 +36,10 @@ object DevopsPlugin extends AutoPlugin {
   val scalafmtVersion = "3.0.4"
 
   object autoImport {
-    val sdSetup = taskKey[Unit]("Setup devops stuff")
-    val sdQA = taskKey[Unit]("SanDinh QA (Quality Assurance)")
-    val sdMmNotify = taskKey[Unit]("Mattermost notify")
-    val sdNexusHost = settingKey[String](
+    val devopsSetup = taskKey[Unit]("Setup devops stuff")
+    val devopsQA = taskKey[Unit]("QA (Quality Assurance)")
+    val devopsMattermost = taskKey[Unit]("Mattermost notify")
+    val devopsNexusHost = settingKey[String](
       "Your private nexus host, ex repo.example.com. Not used in devops-oss"
     )
   }
@@ -58,8 +58,8 @@ object DevopsPlugin extends AutoPlugin {
   private val inAny = ScopeFilter(inAnyProject, inAnyConfiguration)
 
   override lazy val globalSettings: Seq[Setting[_]] = Seq(
-    sdSetup := sdSetupTask.value,
-    sdQA := {
+    devopsSetup := sdSetupTask.value,
+    devopsQA := {
       // <task>.value macro causing spurious “a pure expression does nothing” warning
       // This `val _ =` is not need if we set `pluginCrossBuild` to a newer sbt version
       val _ = sdQaBaseTask.value
@@ -73,7 +73,7 @@ object DevopsPlugin extends AutoPlugin {
           |RECOMMEND: git commit or stash all changes before formatting.""".stripMargin
       )
     },
-    sdMmNotify := sdMmNotifyTask.value,
+    devopsMattermost := sdMmNotifyTask.value,
   ) ++ ciReleaseSettings ++ globalSettingsImpl
 
   // see CiReleasePlugin.globalSettings
@@ -172,7 +172,7 @@ object DevopsPlugin extends AutoPlugin {
     )
     val runId = env.getOrElse(
       "GITHUB_RUN_ID",
-      boom("sdMmNotify task must be run in Github Action")
+      boom("devopsMattermost task must be run in Github Action")
     )
     val home = s"${env("GITHUB_SERVER_URL")}/${env("GITHUB_REPOSITORY")}"
     val link = s"$home/actions/runs/$runId"
@@ -302,7 +302,7 @@ object DevopsPlugin extends AutoPlugin {
     Utils.gitHubInfo match {
       case None =>
         log.warn("""Can't add CI badge to README.md
-            |Pls set github repo as your git `origin` remote and re-run sbt sdSetup
+            |Pls set github repo as your git `origin` remote and re-run sbt devopsSetup
             |""".stripMargin)
         IO.touch(readme)
 
@@ -337,7 +337,7 @@ object DevopsPlugin extends AutoPlugin {
     validatePluginsSbt(baseDir)
 
     val f = baseDir / "README.md"
-    orBoom(f.isFile, "You should create README.md by running sbt sdSetup")
+    orBoom(f.isFile, "You should create README.md by running sbt devopsSetup")
   }
 
   private def validatePluginsSbt(baseDir: File): Unit = {
@@ -371,7 +371,7 @@ object DevopsPlugin extends AutoPlugin {
     val s = line.trim
     if (!s.startsWith(prefix)) return false
     val words = s.substring(prefix.length).split("""[/\s"']""")
-    words.contains("sdQA")
+    words.contains("devopsQA")
   }
 
   def validateGithubCI(baseDir: File): Unit = {
@@ -379,7 +379,7 @@ object DevopsPlugin extends AutoPlugin {
     orBoom(f.isFile, s"$f: File not found!")
     orBoom(
       IO.readLines(f).exists(isSdQAStep),
-      s"$f must define step:\n- run: sbt <optional params> sdQA"
+      s"$f must define step:\n- run: sbt <optional params> devopsQA"
     )
   }
 

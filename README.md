@@ -5,11 +5,11 @@
 #### devops automator for scala/sbt projects
 This is a sbt AutoPlugin that do 4 things:
 
-#### 1. `sdSetup` task:
+#### 1. `devopsSetup` task:
 + Setup scalafmt
 + Setup Github Action CI to
   - test
-  - QA (Quality Assurance) check by running `sbt test sdQA`
+  - QA (Quality Assurance) check by running `sbt test devopsQA`
   - Auto release when you push code to github
     * Release to maven central (sonatype oss) if your project is open source
     * Release to bennuoc if your project is private
@@ -18,13 +18,13 @@ This is a sbt AutoPlugin that do 4 things:
   - notify to mattermost when the CI jobs completed
 + Setup other things such as add a badge to README.md,..
 
-#### 2. `sdQA` task validate that
+#### 2. `devopsQA` task validate that
 + You have setup CI, scalafmt
 + Your code is formatted
 + You don't define version manually
 + ... see source code for more detail
 
-#### 3. `sdMmNotify` task
+#### 3. `devopsMattermost` task
 
 #### 4. Auto add some sbt settings such as
 + `version`: Auto get from git
@@ -47,9 +47,9 @@ addSbtPlugin("com.sandinh" % "sbt-devops-oss" % "<version>")
 ```
 
 ## Usage
-1. install (see above) -> run `sbt sdSetup`
+1. install (see above) -> run `sbt devopsSetup`
 2. (optional) remove some sbt settings that have been defined by sbt-devops such as `publishTo`,.. see above.
-3. run `sbt +sdQA`
+3. run `sbt +devopsQA`
 4. To auto release, you need manually setup secrets in your github repo setting:  
    `Your github repo -> Settings -> Secrets -> New repository secret`
 + sbt-devops (private repo)

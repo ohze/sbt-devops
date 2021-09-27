@@ -5,7 +5,7 @@ import sbt.Keys._
 import CrossVersion.for3Use2_13
 import Def.Initialize
 import com.sandinh.devops.DevopsPlugin
-import com.sandinh.devops.DevopsPlugin.autoImport.sdNexusHost
+import DevopsPlugin.autoImport.devopsNexusHost
 
 import scala.collection.immutable.Seq
 import scala.collection.{Seq => CSeq}
@@ -30,7 +30,7 @@ object SdPlugin extends AutoPlugin {
   }
 
   override def globalSettings: Seq[Setting[_]] = Seq(
-    sdNexusHost := "repo.bennuoc.com",
+    devopsNexusHost := "repo.bennuoc.com",
   )
 
   override lazy val buildSettings: Seq[Setting[_]] = Seq(

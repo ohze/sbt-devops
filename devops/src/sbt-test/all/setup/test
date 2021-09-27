@@ -1,17 +1,17 @@
-> sdSetup
--> sdQA
+> devopsSetup
+-> devopsQA
 > scalafmtSbt
-> sdQA
+> devopsQA
 $ exists README.md
 $ delete README.md
--> sdQA
+-> devopsQA
 $ exec git init
 $ exec git remote add origin https://github.com/user/repo1.git
 > readme1
 -> check1Fail
-> sdSetup
+> devopsSetup
 > check1
 > readme2
-> sdSetup
+> devopsSetup
 # $ pause
 > check2
