@@ -1,25 +1,20 @@
 lazy val pluginSettings = Seq(
-  // https://www.scala-sbt.org/1.x/docs/Plugins.html#Creating+an+auto+plugin
-  pluginCrossBuild / sbtVersion := {
-    scalaBinaryVersion.value match {
-      case "2.12" => "1.3.13" // set minimum sbt version
-    }
-  },
-  // https://www.scala-sbt.org/1.x/docs/Testing-sbt-plugins.html
-  scriptedLaunchOpts := {
-    scriptedLaunchOpts.value ++
-      Seq("-Xmx1024M", "-Dplugin.version=" + version.value)
-  },
+  pluginCrossBuild / sbtVersion := "1.3.13", // set minimum sbt version
+  scriptedLaunchOpts += "-Xmx1024M",
   scripted := scripted.dependsOn(scriptedPrepare).evaluated,
 )
 
 def scriptedPrepare = Def.task {
-  val d = sbtTestDirectory.value / "all"
   for {
-    prjDir <- (PathFinder(d) * DirectoryFilter).get()
-    f = prjDir / "project/plugins.sbt"
-    if !f.isFile
-  } IO.copyFile(d / "plugins.sbt", f)
+    prjDir <- (
+      PathFinder(sbtTestDirectory.value) * DirectoryFilter * DirectoryFilter
+    ).get()
+  } IO.write(
+    prjDir / "project/plugins.sbt",
+    s"""addSbtPlugin("${organization.value}" % "${name.value}" % "${version.value}")
+       |libraryDependencies += "org.scalameta" %% "munit" % "0.7.29"
+       |""".stripMargin
+  )
 }
 
 lazy val commonDeps = Seq(
