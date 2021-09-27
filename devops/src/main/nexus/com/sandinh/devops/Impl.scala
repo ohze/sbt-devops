@@ -19,7 +19,7 @@ object Impl extends ImplTrait {
     "nexus" at s"https://$host/repository/maven$tpe"
 
   lazy val buildSettingsImpl: Seq[Setting[_]] = Seq(
-    resolvers += repo(devopsNexusHost.value, "public"),
+    resolvers ++= devopsNexusHost.?.value.map(repo(_, "public")),
   )
 
   lazy val globalSettingsImpl: Seq[Setting[_]] = Seq(
@@ -27,14 +27,15 @@ object Impl extends ImplTrait {
       for {
         u <- env.get("NEXUS_USER")
         p <- env.get("NEXUS_PASS")
-      } yield Credentials(nexusRealm, devopsNexusHost.value, u, p)
+        host <- devopsNexusHost.?.value
+      } yield Credentials(nexusRealm, host, u, p)
     },
   )
 
   lazy val projectSettingsImpl: Seq[Setting[_]] = Seq(
     publishTo := {
       val tpe = if (isSnapshot.value) "snapshots" else "releases"
-      Some(repo(devopsNexusHost.value, tpe))
+      devopsNexusHost.?.value.map(repo(_, tpe))
     },
   )
 
