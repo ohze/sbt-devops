@@ -162,8 +162,10 @@ object DevopsPlugin extends AutoPlugin {
     val version = projectAndSkip
       .all(ScopeFilter(inAnyProject))
       .value
-      .collect { case (m, false) => m.name + ":" + m.revision }
-      .mkString(", ")
+      .collect { case (m, false) => m }
+      .groupBy(_.revision)
+      .map { case (rev, ms) => s"**$rev**: " + ms.map(_.name).mkString(", ") }
+      .mkString("\n")
     val webhook = env
       .any("WEBHOOK_URL")
       .getOrElse(boom(s"None of ${envKeys("WEBHOOK_URL")} env is set"))
