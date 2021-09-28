@@ -7,6 +7,7 @@ jobs:
     strategy:
       matrix:
         java: [ '8', '11', '17' ]
+        tpe: [ '', '-oss' ]
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-java@v2
@@ -14,7 +15,7 @@ jobs:
           java-version: ${{ matrix.java }}
           distribution: 'temurin'
       - uses: coursier/cache-action@v6
-      - run: sbt devopsQA test scripted
+      - run: sbt devopsQA test 'sbt-devops${{ matrix.tpe }}/scripted' 'sd-devops${{ matrix.tpe }}/scripted'
       # https://www.scala-sbt.org/1.x/docs/GitHub-Actions-with-sbt.html#Caching
       - run: |
           rm -rf "$HOME/.ivy2/local" || true
