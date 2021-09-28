@@ -94,7 +94,12 @@ object DevopsPlugin extends AutoPlugin {
     },
   )
 
-  override lazy val projectSettings: Seq[Setting[?]] = projectSettingsImpl
+  override lazy val projectSettings: Seq[Setting[?]] = Seq(
+    dynverAssertVersion := orBoom(
+      version.value == (ThisBuild / dynver).value,
+      s"Project ${name.value} define `version` manually!"
+    ),
+  ) ++ projectSettingsImpl
 
   private val projectAndSkip = Def.task {
     projectID.value -> (publish / skip).value
