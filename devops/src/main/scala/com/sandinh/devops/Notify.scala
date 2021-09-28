@@ -21,11 +21,11 @@ object Notify {
 
     private def publishSuccess = name == "publish" && result == "success"
 
-    def asAttachmentField(versionMsg: String): ujson.Obj = {
-      val o = ujson.Obj("short" -> true, "title" -> s"$emoji $name")
-      if (publishSuccess) o("value") = versionMsg
-      o
-    }
+    def asAttachmentField(version: String): ujson.Obj = ujson.Obj(
+      "short" -> true,
+      "title" -> name,
+      "value" -> (if (publishSuccess) s"$emoji $version" else emoji)
+    )
 
     override def toString: String = s"$name: $result"
   }
