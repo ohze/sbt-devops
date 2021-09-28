@@ -138,6 +138,8 @@ object DevopsPlugin extends AutoPlugin {
       case _ => boom("invalid Job result")
     }
 
+    def isFailure: Boolean = result == "failure"
+
     private def publishSuccess = name == "publish" && result == "success"
 
     def asAttachmentField(version: String): ujson.Obj = {
@@ -195,6 +197,7 @@ object DevopsPlugin extends AutoPlugin {
       "fields" -> jobs.map(_.asAttachmentField(version)),
     )
     env.any("PRETEXT").foreach(attachment("pretext") = _)
+    if (jobs.exists(_.isFailure)) attachment("color") = "#FF0000"
 
     val data = ujson.Obj("attachments" -> ujson.Arr(attachment))
 
