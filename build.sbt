@@ -1,50 +1,67 @@
+import scala.sys.env
+import scala.sys.process._
+
+def currentBranch: String =
+  env.get("GITHUB_HEAD_REF") match {
+    case None | Some("") => "git rev-parse --abbrev-ref HEAD".!!.trim()
+    case Some(ref)       => ref
+  }
+
 lazy val pluginSettings = Seq(
-  // https://www.scala-sbt.org/1.x/docs/Plugins.html#Creating+an+auto+plugin
-  pluginCrossBuild / sbtVersion := {
-    scalaBinaryVersion.value match {
-      case "2.12" => "1.3.13" // set minimum sbt version
-    }
-  },
-  // https://www.scala-sbt.org/1.x/docs/Testing-sbt-plugins.html
-  scriptedLaunchOpts := {
-    scriptedLaunchOpts.value ++
-      Seq("-Xmx1024M", "-Dplugin.version=" + version.value)
-  },
+  pluginCrossBuild / sbtVersion := "1.3.13", // minimum sbt version
+  scriptedLaunchOpts ++= Seq(
+    "-Xmx1024M",
+    s"-Ddevops.branch=$currentBranch",
+  ),
   scripted := scripted.dependsOn(scriptedPrepare).evaluated,
 )
 
 def scriptedPrepare = Def.task {
-  val d = sbtTestDirectory.value / "all"
   for {
-    prjDir <- (PathFinder(d) * DirectoryFilter).get()
-    f = prjDir / "project/plugins.sbt"
-    if !f.isFile
-  } IO.copyFile(d / "plugins.sbt", f)
+    prjDir <- (
+      PathFinder(sbtTestDirectory.value) * DirectoryFilter * DirectoryFilter
+    ).get()
+  } IO.write(
+    prjDir / "project/plugins.sbt",
+    s"""addSbtPlugin("${organization.value}" % "${moduleName.value}" % "${version.value}")
+       |libraryDependencies += "org.scalameta" %% "munit" % "0.7.29"
+       |""".stripMargin
+  )
 }
 
 lazy val commonDeps = Seq(
   addSbtPlugin("org.scalameta" % "sbt-scalafmt" % "2.4.3"),
+  addSbtPlugin("com.dwijnand" % "sbt-dynver" % "4.1.1"),
+  addSbtPlugin("com.typesafe.sbt" % "sbt-git" % "1.0.1"),
   libraryDependencies ++= Seq(
     "com.lihaoyi" %% "requests" % "0.6.9",
     "com.lihaoyi" %% "ujson" % "1.4.1",
   )
 )
 
-lazy val `sd-devops` = project
+lazy val devops = Project("sbt-devops", file("devops"))
   .enablePlugins(SbtPlugin)
   .settings(pluginSettings ++ commonDeps)
   .settings(
-    addSbtPlugin("com.dwijnand" % "sbt-dynver" % "4.1.1"),
-    addSbtPlugin("com.typesafe.sbt" % "sbt-git" % "1.0.1"),
-    Compile / unmanagedSourceDirectories += (Compile / scalaSource).value.getParentFile / "bennuoc",
+    Compile / unmanagedSourceDirectories += (Compile / scalaSource).value.getParentFile / "nexus",
   )
 
-lazy val `sd-devops-oss` = project
+lazy val devopsOss = Project("sbt-devops-oss", file("devops-oss"))
   .enablePlugins(SbtPlugin)
   .settings(pluginSettings ++ commonDeps)
   .settings(
-    addSbtPlugin("com.geirsson" % "sbt-ci-release" % "1.5.7"),
-    Compile / unmanagedSourceDirectories += (`sd-devops` / Compile / scalaSource).value,
+    addSbtPlugin("org.xerial.sbt" % "sbt-sonatype" % "3.9.10"),
+    addSbtPlugin("com.github.sbt" % "sbt-pgp" % "2.1.2"),
+    Compile / unmanagedSourceDirectories += (devops / Compile / scalaSource).value,
+    scripted := scripted
+      .dependsOn(Def.task {
+        IO.copyDirectory(
+          (devops / sbtTestDirectory).value,
+          target.value / "sbt-test"
+        )
+      })
+      .evaluated,
+    sbtTestDirectory := target.value / "sbt-test",
   )
 
 inThisBuild(
@@ -61,9 +78,20 @@ inThisBuild(
   )
 )
 
-lazy val `sd-devops-root` = project
-  .in(file("."))
+// for sandinh only
+def sandinhPrj(id: String) = Project(id, file("sd"))
+  .enablePlugins(SbtPlugin)
   .settings(
-    publish / skip := true
+    pluginCrossBuild / sbtVersion := "1.5.5",
+    dynverTagPrefix := "sd",
+    target := target.value / id,
   )
-  .aggregate(`sd-devops`, `sd-devops-oss`)
+
+lazy val sd = sandinhPrj("sd-devops").dependsOn(devops)
+
+lazy val sdOss = sandinhPrj("sd-devops-oss").dependsOn(devopsOss)
+
+lazy val `sbt-devops-root` = project
+  .in(file("."))
+  .settings(skipPublish)
+  .aggregate(devops, devopsOss, sd, sdOss)

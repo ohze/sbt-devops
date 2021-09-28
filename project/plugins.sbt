@@ -1,6 +1,6 @@
 Compile / unmanagedSourceDirectories ++= {
   val base = (ThisBuild / baseDirectory).value.getParentFile
-  Seq("sd-devops", "sd-devops-oss").map { d =>
+  Seq("devops", "devops-oss", "sd").map { d =>
     base / d / "src" / "main" / "scala"
   }
 }
@@ -10,4 +10,7 @@ libraryDependencies ++= Seq(
 )
 addSbtPlugin("org.scalameta" % "sbt-scalafmt" % "2.4.3")
 
-addSbtPlugin("com.geirsson" % "sbt-ci-release" % "1.5.7")
+addSbtPlugin("com.dwijnand" % "sbt-dynver" % "4.1.1")
+addSbtPlugin("com.typesafe.sbt" % "sbt-git" % "1.0.1")
+addSbtPlugin("org.xerial.sbt" % "sbt-sonatype" % "3.9.10")
+addSbtPlugin("com.github.sbt" % "sbt-pgp" % "2.1.2")
