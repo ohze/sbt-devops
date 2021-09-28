@@ -13,7 +13,6 @@ import sbtdynver.DynVer
 import sbtdynver.DynVerPlugin.autoImport.*
 
 import java.nio.file.Files
-import java.util.Date
 import scala.util.matching.Regex
 import scala.collection.JavaConverters.*
 import scala.collection.immutable.Seq
@@ -119,7 +118,9 @@ object DevopsPlugin extends AutoPlugin {
     dynverGitDescribeOutput := dynverInstance.value.getGitDescribeOutput(
       (ThisBuild / dynverCurrentDate).value
     ),
-    dynver := dynverInstance.value.sonatypeVersion(new Date),
+    dynver := dynverInstance.value.sonatypeVersion(
+      (ThisBuild / dynverCurrentDate).value
+    ),
     dynverCheckVersion := (dynver.value == version.value),
     dynverAssertVersion := orBoom(
       dynverCheckVersion.value,
