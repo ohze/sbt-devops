@@ -140,11 +140,11 @@ object DevopsPlugin extends AutoPlugin {
 
     private def publishSuccess = name == "publish" && result == "success"
 
-    def asAttachmentField(version: String): ujson.Obj = ujson.Obj(
-      "short" -> true,
-      "title" -> name,
-      "value" -> (emoji + (if (publishSuccess) " " + version else ""))
-    )
+    def asAttachmentField(version: String): ujson.Obj = {
+      val o = ujson.Obj("short" -> true, "title" -> s"$emoji $name")
+      if (publishSuccess) o("value") = version
+      o
+    }
 
     override def toString: String = s"$name: $result"
   }
