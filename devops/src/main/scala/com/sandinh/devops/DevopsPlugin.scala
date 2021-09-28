@@ -153,12 +153,15 @@ object DevopsPlugin extends AutoPlugin {
     s"git show -s --format=%s ${env("GITHUB_SHA")}".!!.trim
   }
 
+  private val projectAndSkip = Def.task {
+    projectID.value -> (publish / skip).value
+  }
   // https://developers.mattermost.com/integrate/incoming-webhooks/#parameters
   def sdMmNotifyTask: Initialize[Task[Unit]] = Def.task {
-    val version = projectID
+    val version = projectAndSkip
       .all(ScopeFilter(inAnyProject))
       .value
-      .map { m => m.name + ":" + m.revision }
+      .collect { case (m, false) => m.name + ":" + m.revision }
       .mkString(", ")
     val webhook = env
       .any("WEBHOOK_URL")
