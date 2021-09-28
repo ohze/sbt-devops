@@ -1,10 +1,17 @@
-import com.sandinh.devops.Utils.currentBranch
+import scala.sys.env
+import scala.sys.process._
+
+def currentBranch: String =
+  env.get("GITHUB_HEAD_REF") match {
+    case None | Some("") => "git rev-parse --abbrev-ref HEAD".!!.trim()
+    case Some(ref)       => ref
+  }
 
 lazy val pluginSettings = Seq(
   pluginCrossBuild / sbtVersion := "1.3.13", // minimum sbt version
   scriptedLaunchOpts ++= Seq(
     "-Xmx1024M",
-    "-Ddevops.branch=" + currentBranch.get,
+    s"-Ddevops.branch=$currentBranch",
   ),
   scripted := scripted.dependsOn(scriptedPrepare).evaluated,
 )

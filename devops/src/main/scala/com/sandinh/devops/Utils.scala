@@ -32,10 +32,6 @@ object Utils {
     }
   }
 
-  def currentBranch: Try[String] = Try {
-    "git rev-parse --abbrev-ref HEAD".!!.trim()
-  }
-
   def isTag: Boolean = env.get("GITHUB_REF").exists(_.startsWith("refs/tags"))
 
   def isSnapshotVersion(state: State): Boolean = {
