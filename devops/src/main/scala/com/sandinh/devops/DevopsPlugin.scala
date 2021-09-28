@@ -94,39 +94,7 @@ object DevopsPlugin extends AutoPlugin {
     },
   )
 
-  override lazy val projectSettings: Seq[Setting[?]] =
-    dynVerSettings ++ projectSettingsImpl
-
-  /** Those settings are similar to [[sbtdynver.DynVerPlugin.buildSettings]] but:
-    * + dynverSonatypeSnapshots is hardcode = true
-    * + Don't use dynverVTagPrefix.
-    *   If you don't set dynverTagPrefix then logic will be same as set dynverTagPrefix = "v"
-    * + Can be used for projectSettings
-    *   So, each project can customize version by setting dynverVTagPrefix
-    */
-  lazy val dynVerSettings: Seq[Setting[?]] = Seq(
-    version := dynverGitDescribeOutput.value.sonatypeVersionWithSep(
-      (ThisBuild / dynverCurrentDate).value,
-      (ThisBuild / dynverSeparator).value
-    ),
-    isSnapshot := dynverGitDescribeOutput.value.isSnapshot,
-    dynverInstance := DynVer(
-      Some((ThisBuild / baseDirectory).value),
-      (ThisBuild / dynverSeparator).value,
-      dynverTagPrefix.or(ThisBuild / dynverTagPrefix).value
-    ),
-    dynverGitDescribeOutput := dynverInstance.value.getGitDescribeOutput(
-      (ThisBuild / dynverCurrentDate).value
-    ),
-    dynver := dynverInstance.value.sonatypeVersion(
-      (ThisBuild / dynverCurrentDate).value
-    ),
-    dynverCheckVersion := (dynver.value == version.value),
-    dynverAssertVersion := orBoom(
-      dynverCheckVersion.value,
-      s"Project ${name.value} define `version` manually!"
-    ),
-  )
+  override lazy val projectSettings: Seq[Setting[?]] = projectSettingsImpl
 
   private val projectAndSkip = Def.task {
     projectID.value -> (publish / skip).value
