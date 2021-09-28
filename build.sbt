@@ -16,7 +16,7 @@ def scriptedPrepare = Def.task {
     ).get()
   } IO.write(
     prjDir / "project/plugins.sbt",
-    s"""addSbtPlugin("${organization.value}" % "${name.value}" % "${version.value}")
+    s"""addSbtPlugin("${organization.value}" % "${moduleName.value}" % "${version.value}")
        |libraryDependencies += "org.scalameta" %% "munit" % "0.7.29"
        |""".stripMargin
   )
