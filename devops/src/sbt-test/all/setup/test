@@ -1,6 +1,8 @@
 > devopsSetup
 -> devopsQA
+> reload
 > scalafmtSbt
+> reload
 > devopsQA
 $ exists README.md
 $ delete README.md
