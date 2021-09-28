@@ -67,14 +67,12 @@ Release with tag `vM.N.P` => version `M.N.P`, ex `v3.0.0` => version `3.0.0`
   - `MATTERMOST_WEBHOOK_URL`
   See [files/sbt-devops.yml](files/sbt-devops.yml) for details and how to customize message, icon, channel,..
 7. (optional) customize `.scalafmt.conf, .github/workflows/sbt-devops.yml`
-8. Commit changes, push -> auto publish SNAPSHOT.
-+ <a id="Tag-to-release">Tag to release</a>: Push tag -> auto publish release version.  
-  - The tag format must be `<dynverTagPrefix><MajorNumber><remains>`
-    * `dynverTagPrefix` default = `v`  
-      Tag example: `v1.2.3-blabla` to release version `1.2.3-blabla`
-    * Don't like [sbt-dynver](https://github.com/dwijnand/sbt-dynver), you can set `dynverTagPrefix`
-      for some projects in a multiple project sbt build to customize that projects versioning.  
-      See [versionPerProj sbt-test](devops/src/sbt-test/all/versionPerProj) for the real code example.
+8. Commit changes, push -> auto publish -> notify.
++ <a id="Tag-to-release">Tag to release</a>: Push tag -> publish release version.  
+  The tag format must be `<dynverTagPrefix><MajorNumber><remains>`  
+  `dynverTagPrefix` default = `v`  
+  Tag example: `v1.2.3-blabla` to release version `1.2.3-blabla`
++ Push commit has no matched tag -> publish `..-SNAPSHOT` version
 9. Enjoy
 
 ## Thanks

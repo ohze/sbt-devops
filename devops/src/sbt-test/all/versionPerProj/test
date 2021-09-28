@@ -7,7 +7,9 @@ $ exec git commit -m "init"
 $ exec git tag v1.1
 > reload; check1
 $ exec git tag pB1.2
-> reload; check2
+> reload; check1
 > devopsSetup
 > scalafmtSbt
+> reload
 > devopsQA
+> reload; check2
