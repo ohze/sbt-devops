@@ -16,7 +16,7 @@ object Impl extends ImplTrait {
   val nexusRealm = "Sonatype Nexus Repository Manager"
 
   private def repo(host: String, tpe: String) =
-    s"nexus-$tpe" at s"https://$host/repository/maven$tpe"
+    s"nexus-$tpe" at s"https://$host/repository/maven-$tpe"
 
   lazy val buildSettingsImpl: Seq[Setting[?]] = Seq(
     resolvers ++= devopsNexusHost.?.value.map(repo(_, "public")),
