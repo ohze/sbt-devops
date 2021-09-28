@@ -2,8 +2,8 @@ package com.sandinh.devops
 
 import scala.collection.immutable.Seq
 import scala.sys.env
-import sbt._
-import sbt.Keys._
+import sbt.*
+import sbt.Keys.*
 import com.typesafe.sbt.GitPlugin
 import sbtdynver.DynVerPlugin
 import DevopsPlugin.autoImport.devopsNexusHost
@@ -18,11 +18,11 @@ object Impl extends ImplTrait {
   private def repo(host: String, tpe: String) =
     "nexus" at s"https://$host/repository/maven$tpe"
 
-  lazy val buildSettingsImpl: Seq[Setting[_]] = Seq(
+  lazy val buildSettingsImpl: Seq[Setting[?]] = Seq(
     resolvers ++= devopsNexusHost.?.value.map(repo(_, "public")),
   )
 
-  lazy val globalSettingsImpl: Seq[Setting[_]] = Seq(
+  lazy val globalSettingsImpl: Seq[Setting[?]] = Seq(
     credentials ++= {
       for {
         u <- env.get("NEXUS_USER")
@@ -32,7 +32,7 @@ object Impl extends ImplTrait {
     },
   )
 
-  lazy val projectSettingsImpl: Seq[Setting[_]] = Seq(
+  lazy val projectSettingsImpl: Seq[Setting[?]] = Seq(
     publishTo := {
       val tpe = if (isSnapshot.value) "snapshots" else "releases"
       devopsNexusHost.?.value.map(repo(_, tpe))

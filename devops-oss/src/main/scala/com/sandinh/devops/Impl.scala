@@ -4,8 +4,8 @@ import com.jsuereth.sbtpgp.SbtPgp
 import com.typesafe.sbt.GitPlugin
 
 import scala.collection.immutable.Seq
-import sbt._
-import sbt.Keys._
+import sbt.*
+import sbt.Keys.*
 import sbtdynver.DynVerPlugin
 import xerial.sbt.Sonatype
 import xerial.sbt.Sonatype.autoImport.sonatypePublishToBundle
@@ -17,15 +17,15 @@ object Impl extends ImplTrait {
 
   def requiresImpl: Plugins = SbtPgp && DynVerPlugin && GitPlugin && Sonatype
 
-  lazy val buildSettingsImpl: Seq[Setting[_]] = Seq(
+  lazy val buildSettingsImpl: Seq[Setting[?]] = Seq(
     licenses := List(
       "Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0")
     ),
   )
 
-  lazy val globalSettingsImpl: Seq[Setting[_]] = Nil
+  lazy val globalSettingsImpl: Seq[Setting[?]] = Nil
 
-  lazy val projectSettingsImpl: Seq[Setting[_]] = Seq(
+  lazy val projectSettingsImpl: Seq[Setting[?]] = Seq(
     publishTo := sonatypePublishToBundle.value,
   )
 
@@ -48,7 +48,7 @@ object Impl extends ImplTrait {
   )
 
   def setupGpg(): Unit = {
-    import scala.sys.process._
+    import scala.sys.process.*
 
     val versionLine = List("gpg", "--version").!!.linesIterator.toList.head
     println(versionLine)

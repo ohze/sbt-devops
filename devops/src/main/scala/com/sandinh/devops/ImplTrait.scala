@@ -7,9 +7,9 @@ import scala.collection.immutable.Seq
 trait ImplTrait {
   def isOss: Boolean
   def requiresImpl: Plugins
-  def buildSettingsImpl: Seq[Setting[_]]
-  def globalSettingsImpl: Seq[Setting[_]]
-  def projectSettingsImpl: Seq[Setting[_]]
+  def buildSettingsImpl: Seq[Setting[?]]
+  def globalSettingsImpl: Seq[Setting[?]]
+  def projectSettingsImpl: Seq[Setting[?]]
   private[devops] def ciReleaseSnapshotCmds: List[String]
   private[devops] def ciReleaseCmds: List[String]
 }

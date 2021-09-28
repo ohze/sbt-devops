@@ -1,14 +1,14 @@
 package com.sandinh.sbtsd
 
-import sbt.{Def, Setting, _}
-import sbt.Keys._
+import sbt.*
+import sbt.Keys.*
 import CrossVersion.for3Use2_13
 import Def.Initialize
 import com.sandinh.devops.DevopsPlugin
 import DevopsPlugin.autoImport.devopsNexusHost
 
 import scala.collection.immutable.Seq
-import scala.collection.{Seq => CSeq}
+import scala.collection.Seq as CSeq
 
 object SdPlugin extends AutoPlugin {
   override def trigger = allRequirements
@@ -18,7 +18,7 @@ object SdPlugin extends AutoPlugin {
     val (scala211, scala212, scala213, scala3) =
       ("2.11.12", "2.12.15", "2.13.6", "3.0.2")
 
-    val skipPublish: Seq[Setting[_]] = SdPlugin.skipPublish
+    val skipPublish: Seq[Setting[?]] = SdPlugin.skipPublish
 
     lazy val akkaVersion = settingKey[String]("akkaVersion")
 
@@ -29,19 +29,19 @@ object SdPlugin extends AutoPlugin {
     }
   }
 
-  override def globalSettings: Seq[Setting[_]] = Seq(
+  override def globalSettings: Seq[Setting[?]] = Seq(
     devopsNexusHost := "repo.bennuoc.com",
   )
 
-  override lazy val buildSettings: Seq[Setting[_]] = Seq(
+  override lazy val buildSettings: Seq[Setting[?]] = Seq(
     organization := "com.sandinh",
   )
 
-  override def projectSettings: Seq[Setting[_]] = Seq(
+  override def projectSettings: Seq[Setting[?]] = Seq(
     scalacSetting,
   )
 
-  val skipPublish: Seq[Setting[_]] = Seq(
+  val skipPublish: Seq[Setting[?]] = Seq(
     publish / skip := true,
     publishLocal / skip := true,
   )

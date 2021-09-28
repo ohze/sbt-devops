@@ -5,24 +5,24 @@ import org.scalafmt.sbt.ScalafmtPlugin.autoImport.{
   scalafmtCheck,
   scalafmtSbtCheck
 }
-import sbt._
-import sbt.Keys._
+import sbt.*
+import sbt.Keys.*
 import sbt.Def.Initialize
 import sbt.io.Using
 import sbtdynver.DynVer
-import sbtdynver.DynVerPlugin.autoImport._
+import sbtdynver.DynVerPlugin.autoImport.*
 
 import java.nio.file.Files
 import java.util.Date
 import scala.util.matching.Regex
-import scala.collection.JavaConverters._
+import scala.collection.JavaConverters.*
 import scala.collection.immutable.Seq
 import scala.sys.env
 import Utils.{gitHubScmInfo, isSnapshotVersion, isTag}
 
 object DevopsPlugin extends AutoPlugin {
   private[this] val impl: ImplTrait = Impl
-  import impl._
+  import impl.*
 
   override def trigger = allRequirements
   override def requires = requiresImpl
@@ -37,9 +37,9 @@ object DevopsPlugin extends AutoPlugin {
       "Your private nexus host, ex repo.example.com. Not used in devops-oss"
     )
   }
-  import autoImport._
+  import autoImport.*
 
-  override lazy val buildSettings: Seq[Setting[_]] = Seq(
+  override lazy val buildSettings: Seq[Setting[?]] = Seq(
     homepage := scmInfo.value.map(_.browseUrl),
     dynverTagPrefix := "v",
     dynverSonatypeSnapshots := true,
@@ -51,7 +51,7 @@ object DevopsPlugin extends AutoPlugin {
 
   private val inAny = ScopeFilter(inAnyProject, inAnyConfiguration)
 
-  override lazy val globalSettings: Seq[Setting[_]] = Seq(
+  override lazy val globalSettings: Seq[Setting[?]] = Seq(
     devopsSetup := sdSetupTask.value,
     devopsQA := {
       // <task>.value macro causing spurious “a pure expression does nothing” warning
@@ -71,7 +71,7 @@ object DevopsPlugin extends AutoPlugin {
   ) ++ ciReleaseSettings ++ globalSettingsImpl
 
   // see CiReleasePlugin.globalSettings
-  lazy val ciReleaseSettings: Seq[Setting[_]] = Seq(
+  lazy val ciReleaseSettings: Seq[Setting[?]] = Seq(
     Test / publishArtifact := false,
     publishMavenStyle := true,
     commands += Command.command("ci-release") { state =>
@@ -95,7 +95,7 @@ object DevopsPlugin extends AutoPlugin {
     },
   )
 
-  override lazy val projectSettings: Seq[Setting[_]] =
+  override lazy val projectSettings: Seq[Setting[?]] =
     dynVerSettings ++ projectSettingsImpl
 
   /** Those settings are similar to [[sbtdynver.DynVerPlugin.buildSettings]] but:
@@ -105,7 +105,7 @@ object DevopsPlugin extends AutoPlugin {
     * + Can be used for projectSettings
     *   So, each project can customize version by setting dynverVTagPrefix
     */
-  lazy val dynVerSettings: Seq[Setting[_]] = Seq(
+  lazy val dynVerSettings: Seq[Setting[?]] = Seq(
     version := dynverGitDescribeOutput.value.sonatypeVersionWithSep(
       (ThisBuild / dynverCurrentDate).value,
       (ThisBuild / dynverSeparator).value
@@ -149,7 +149,7 @@ object DevopsPlugin extends AutoPlugin {
   }
 
   private def commitMsg = {
-    import sys.process._
+    import sys.process.*
     s"git show -s --format=%s ${env("GITHUB_SHA")}".!!.trim
   }
 
