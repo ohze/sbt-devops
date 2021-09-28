@@ -77,7 +77,6 @@ def sandinhPrj(id: String) = Project(id, file("sd"))
   .settings(
     pluginCrossBuild / sbtVersion := "1.5.5",
     dynverTagPrefix := "sd",
-    addSbtPlugin("com.eed3si9n" % "sbt-projectmatrix" % "0.8.0"),
     target := target.value / id,
   )
 

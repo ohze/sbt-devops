@@ -82,8 +82,7 @@ This project use:
 + Depends on sbt plugins: [sbt-scalafmt](https://github.com/scalameta/sbt-scalafmt),
 [sbt-dynver](https://github.com/dwijnand/sbt-dynver), [sbt-git](https://github.com/sbt/sbt-git),
 [sbt-sonatype](https://github.com/xerial/sbt-sonatype), [sbt-pgp](https://github.com/sbt/sbt-pgp)
-+ Internal use [sbt-projectmatrix](https://github.com/sbt/sbt-projectmatrix)
-and copy some code from [sbt-ci-release](https://github.com/sbt/sbt-ci-release) plugins.
++ Copy some code from [sbt-ci-release](https://github.com/sbt/sbt-ci-release) plugins.
 + Use lihaoyi's [requests](https://github.com/com-lihaoyi/requests-scala), [ujson](https://github.com/com-lihaoyi/upickle)
 + of course scala, sbt and the transitive dependencies.
 Thanks you all!
