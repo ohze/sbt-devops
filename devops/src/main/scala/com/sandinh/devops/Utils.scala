@@ -1,7 +1,8 @@
 package com.sandinh.devops
 
+import sbt.*
 import sbt.Keys.version
-import sbt.{Project, ScmInfo, State, ThisBuild, url}
+import scala.collection.immutable.Seq
 import scala.sys.env
 import scala.sys.process.*
 import scala.util.Try
@@ -38,6 +39,25 @@ object Utils {
     (ThisBuild / version).get(Project.extract(state).structure.data) match {
       case Some(v) => v.endsWith("-SNAPSHOT")
       case None    => throw new NoSuchFieldError("version")
+    }
+  }
+
+  def boom(msg: String) = throw new MessageOnlyException(msg)
+  def orBoom(check: => Boolean, msg: String): Unit = if (!check) boom(msg)
+
+  private[devops] def envKeys(suffix: String): Seq[String] =
+    Seq("MATTERMOST_", "SLACK_", "DEVOPS_").map(_ + suffix)
+
+  private[devops] implicit class EnvOps(val m: Map[String, String])
+      extends AnyVal {
+    def any(keySuffix: String): Option[String] =
+      envKeys(keySuffix).flatMap(m.get).headOption
+  }
+
+  implicit class ResultOps(val r: Result[?]) extends AnyVal {
+    def isSuccess: Boolean = r match {
+      case Value(_) => true
+      case Inc(_)   => false
     }
   }
 }

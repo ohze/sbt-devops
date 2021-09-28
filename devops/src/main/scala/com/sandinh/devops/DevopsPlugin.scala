@@ -17,7 +17,7 @@ import scala.util.matching.Regex
 import scala.collection.JavaConverters.*
 import scala.collection.immutable.Seq
 import scala.sys.env
-import Utils.{gitHubScmInfo, isSnapshotVersion, isTag}
+import Utils.{gitHubScmInfo, isSnapshotVersion, isTag, orBoom, ResultOps}
 
 object DevopsPlugin extends AutoPlugin {
   private[this] val impl: ImplTrait = Impl
@@ -128,38 +128,10 @@ object DevopsPlugin extends AutoPlugin {
     ),
   )
 
-  private case class Job(name: String, result: String) {
-    def emoji: String = result match {
-      case "success"   => ":white_check_mark:"
-      case "failure"   => ":x:"
-      case "cancelled" => ":white_circle:"
-      case "skipped" =>
-        ":black_right_pointing_double_triangle_with_vertical_bar:"
-      case _ => boom("invalid Job result")
-    }
-
-    def isFailure: Boolean = result == "failure"
-
-    private def publishSuccess = name == "publish" && result == "success"
-
-    def asAttachmentField(version: String): ujson.Obj = {
-      val o = ujson.Obj("short" -> true, "title" -> s"$emoji $name")
-      if (publishSuccess) o("value") = version
-      o
-    }
-
-    override def toString: String = s"$name: $result"
-  }
-
-  private def commitMsg = {
-    import sys.process.*
-    s"git show -s --format=%s ${env("GITHUB_SHA")}".!!.trim
-  }
-
   private val projectAndSkip = Def.task {
     projectID.value -> (publish / skip).value
   }
-  // https://developers.mattermost.com/integrate/incoming-webhooks/#parameters
+
   def sdMmNotifyTask: Initialize[Task[Unit]] = Def.task {
     val version = projectAndSkip
       .all(ScopeFilter(inAnyProject))
@@ -168,55 +140,7 @@ object DevopsPlugin extends AutoPlugin {
       .groupBy(_.revision)
       .map { case (rev, ms) => s"**$rev**: " + ms.map(_.name).mkString(", ") }
       .mkString("\n")
-    val webhook = env
-      .any("WEBHOOK_URL")
-      .getOrElse(boom(s"None of ${envKeys("WEBHOOK_URL")} env is set"))
-    val runId = env.getOrElse(
-      "GITHUB_RUN_ID",
-      boom("devopsNotify task must be run in Github Action")
-    )
-    val home = s"${env("GITHUB_SERVER_URL")}/${env("GITHUB_REPOSITORY")}"
-    val link = s"$home/actions/runs/$runId"
-    val jobs = for {
-      v <- env.get("_DEVOPS_NEEDS").toSeq
-      (jobName, job) <- ujson.read(v).obj
-    } yield Job(jobName, job.obj("result").str)
-
-    val text = env("GITHUB_EVENT_NAME") match {
-      case "pull_request" =>
-        val payloadFile = file(env("GITHUB_EVENT_PATH"))
-        val pr = ujson.read(payloadFile).obj("number").num.toLong
-        s"pull request [#$pr]($home/pull/$pr)"
-      case _ => s"commit: $commitMsg"
-    }
-    val attachment = ujson.Obj(
-      "fallback" -> jobs.mkString("CI jobs status: ", ", ", ""),
-      "author_name" -> env("GITHUB_REPOSITORY"),
-      "author_icon" -> "https://chat.ohze.net/api/v4/emoji/tu6nrabuftrk78rm78mapoq7to/image",
-      "text" -> s"[CI jobs status]($link) for $text",
-      "fields" -> jobs.map(_.asAttachmentField(version)),
-    )
-    env.any("PRETEXT").foreach(attachment("pretext") = _)
-    if (jobs.exists(_.isFailure)) attachment("color") = "#FF0000"
-
-    val data = ujson.Obj("attachments" -> ujson.Arr(attachment))
-
-    val urlPattern = "https?://.*".r
-    env.any("ICON") match {
-      case Some(url @ urlPattern()) => data("icon_url") = url
-      case Some(emoji)              => data("icon_emoji") = emoji
-      case None => data("icon_emoji") = ":electric_plug:" // ":dizzy:"
-    }
-
-    for {
-      (keySuffix, field) <- Seq(
-        "CHANNEL" -> "channel",
-        "USERNAME" -> "username",
-      )
-      value <- env.any(keySuffix)
-    } data(field) = value
-
-    requests.post(webhook, data = data)
+    Notify(version)
   }
 
   def sdSetupTask: Initialize[Task[Unit]] = Def.task {
@@ -398,23 +322,5 @@ object DevopsPlugin extends AutoPlugin {
       c.getString("version") == scalafmtVersion,
       s"$f: You must update `version` to $scalafmtVersion"
     )
-  }
-
-  def boom(msg: String) = throw new MessageOnlyException(msg)
-  def orBoom(check: => Boolean, msg: String): Unit = if (!check) boom(msg)
-
-  implicit class ResultOps(val r: Result[_]) extends AnyVal {
-    def isSuccess: Boolean = r match {
-      case Value(_) => true
-      case Inc(_)   => false
-    }
-  }
-
-  private def envKeys(suffix: String): Seq[String] =
-    Seq("MATTERMOST_", "SLACK_", "DEVOPS_").map(_ + suffix)
-
-  private implicit class EnvOps(val m: Map[String, String]) extends AnyVal {
-    def any(keySuffix: String): Option[String] =
-      envKeys(keySuffix).flatMap(m.get).headOption
   }
 }
