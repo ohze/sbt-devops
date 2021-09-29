@@ -2,31 +2,20 @@ package com.sandinh.sbtsd
 
 import sbt.*
 import sbt.Keys.*
-import CrossVersion.for3Use2_13
-import Def.Initialize
 import com.sandinh.devops.DevopsPlugin
 import DevopsPlugin.autoImport.devopsNexusHost
 
 import scala.collection.immutable.Seq
-import scala.collection.Seq as CSeq
 
 object SdPlugin extends AutoPlugin {
   override def trigger = allRequirements
-  override def requires: Plugins = DevopsPlugin // && ProjectMatrixPlugin
+  override def requires: Plugins = DevopsPlugin
 
   object autoImport {
     val (scala211, scala212, scala213, scala3) =
       ("2.11.12", "2.12.15", "2.13.6", "3.0.2")
 
     val skipPublish: Seq[Setting[?]] = SdPlugin.skipPublish
-
-    lazy val akkaVersion = settingKey[String]("akkaVersion")
-
-    def akka(modules: String*): Initialize[CSeq[ModuleID]] = akkaVersion { v =>
-      modules.map { m =>
-        "com.typesafe.akka" %% s"akka-$m" % v cross for3Use2_13
-      }
-    }
   }
 
   override def globalSettings: Seq[Setting[?]] = Seq(
