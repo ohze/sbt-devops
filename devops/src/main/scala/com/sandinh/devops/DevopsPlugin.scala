@@ -73,26 +73,28 @@ object DevopsPlugin extends AutoPlugin {
   lazy val ciReleaseSettings: Seq[Setting[?]] = Seq(
     Test / publishArtifact := false,
     publishMavenStyle := true,
-    commands += Command.command("ci-release") { state =>
-      println(s"Running ci-release.\n  branch=${env.get("GITHUB_REF")}")
-      if (!isTag) {
-        if (isSnapshotVersion(state)) {
-          println(s"No tag push, publishing SNAPSHOT")
-          ciReleaseSnapshotCmds ::: state
-        } else {
-          // Happens when a tag is pushed right after merge causing the master branch
-          // job to pick up a non-SNAPSHOT version even if isTag=false.
-          println(
-            "Snapshot releases must have -SNAPSHOT version number, doing nothing"
-          )
-          state
-        }
-      } else {
-        println("Tag push detected, publishing a stable release")
-        ciReleaseCmds ::: state
-      }
-    },
+    commands += Command.command("ci-release")(ciRelease),
   )
+
+  def ciRelease(state: State): State = {
+    println(s"Running ci-release.\n  branch=${env.get("GITHUB_REF")}")
+    if (!isTag) {
+      if (isSnapshotVersion(state)) {
+        println(s"No tag push, publishing SNAPSHOT")
+        ciReleaseSnapshotCmds ::: state
+      } else {
+        // Happens when a tag is pushed right after merge causing the master branch
+        // job to pick up a non-SNAPSHOT version even if isTag=false.
+        println(
+          "Snapshot releases must have -SNAPSHOT version number, doing nothing"
+        )
+        state
+      }
+    } else {
+      println("Tag push detected, publishing a stable release")
+      ciReleaseCmds ::: state
+    }
+  }
 
   override lazy val projectSettings: Seq[Setting[?]] = Seq(
     dynverAssertVersion := orBoom(
