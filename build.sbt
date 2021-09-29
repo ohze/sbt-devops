@@ -60,6 +60,7 @@ lazy val devopsOss = Project("sbt-devops-oss", file("devops-oss"))
     sbtTestDirectory := target.value / "sbt-test",
   )
 
+import scala.scalanative.build._
 lazy val `devops-notify` = project
   .enablePlugins(ScalaNativePlugin)
   .settings(
@@ -67,9 +68,13 @@ lazy val `devops-notify` = project
     // Set to false or remove if you want to show stubs as linking errors
     nativeLinkStubs := true,
     libraryDependencies ++= Seq(
-      "com.softwaremill.sttp.client3" %% "core" % "3.3.14",
-      "com.lihaoyi" %% "ujson" % "1.4.1",
-    )
+      "com.softwaremill.sttp.client3" %%% "upickle" % "3.3.14",
+    ),
+    nativeConfig ~= {
+      _.withLTO(LTO.thin)
+        .withMode(Mode.releaseFast)
+        .withGC(GC.commix)
+    }
   )
 
 inThisBuild(
@@ -101,4 +106,4 @@ lazy val sdOss = sandinhPrj("sd-devops-oss").dependsOn(devopsOss)
 lazy val `sbt-devops-root` = project
   .in(file("."))
   .settings(skipPublish)
-  .aggregate(devops, devopsOss, sd, sdOss)
+  .aggregate(devops, devopsOss, sd, sdOss, `devops-notify`)

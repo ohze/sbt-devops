@@ -1,12 +1,16 @@
 package com.sandinh.devops
 
-import sbt.file
-import requests.Response
-import Utils.{EnvOps, boom, envKeys}
+import sttp.client3.*
+import sttp.client3.upickle.*
+import java.nio.file.Paths
 import scala.collection.immutable.Seq
 import scala.sys.env
 
 object Notify {
+  def main(args: Array[String]): Unit = {
+    ???
+  }
+
   private case class Job(name: String, result: String) {
     def emoji: String = result match {
       case "success"   => ":white_check_mark:"
@@ -30,14 +34,14 @@ object Notify {
     override def toString: String = s"$name: $result"
   }
 
-  private def commitMsg = {
+  private def commitMsg: String = {
     import sys.process.*
     s"git show -s --format=%s ${env("GITHUB_SHA")}".!!.trim
   }
 
   // https://developers.mattermost.com/integrate/incoming-webhooks/#parameters
   /** @param versionMsg is only used as attachments/ fields / value message */
-  def apply(versionMsg: String): Response = {
+  def apply(versionMsg: String): Response[Either[String, String]] = {
     val webhook = env
       .any("WEBHOOK_URL")
       .getOrElse(boom(s"None of ${envKeys("WEBHOOK_URL")} env is set"))
@@ -54,8 +58,8 @@ object Notify {
 
     val text = env("GITHUB_EVENT_NAME") match {
       case "pull_request" =>
-        val payloadFile = file(env("GITHUB_EVENT_PATH"))
-        val pr = ujson.read(payloadFile).obj("number").num.toLong
+        val payloadPath = Paths.get(env("GITHUB_EVENT_PATH"))
+        val pr = ujson.read(payloadPath).obj("number").num.toLong
         s"pull request [#$pr]($home/pull/$pr)"
       case _ => s"commit: $commitMsg"
     }
@@ -86,6 +90,24 @@ object Notify {
       value <- env.any(keySuffix)
     } data(field) = value
 
-    requests.post(webhook, data = data)
+    val backend = CurlBackend()
+
+    emptyRequest
+      .body(data)
+      .post(uri"$webhook")
+      .send(backend)
+  }
+
+  final class MessageOnlyException(override val toString: String)
+      extends RuntimeException(toString)
+  def boom(msg: String) = throw new MessageOnlyException(msg)
+
+  private[devops] def envKeys(suffix: String): Seq[String] =
+    Seq("MATTERMOST_", "SLACK_", "DEVOPS_").map(_ + suffix)
+
+  private[devops] implicit class EnvOps(val m: Map[String, String])
+      extends AnyVal {
+    def any(keySuffix: String): Option[String] =
+      envKeys(keySuffix).flatMap(m.get).headOption
   }
 }
