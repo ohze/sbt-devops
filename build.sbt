@@ -33,10 +33,6 @@ lazy val commonDeps = Seq(
   addSbtPlugin("org.scalameta" % "sbt-scalafmt" % "2.4.3"),
   addSbtPlugin("com.dwijnand" % "sbt-dynver" % "4.1.1"),
   addSbtPlugin("com.typesafe.sbt" % "sbt-git" % "1.0.1"),
-  libraryDependencies ++= Seq(
-    "com.lihaoyi" %% "requests" % "0.6.9",
-    "com.lihaoyi" %% "ujson" % "1.4.1",
-  )
 )
 
 lazy val devops = Project("sbt-devops", file("devops"))
@@ -62,6 +58,18 @@ lazy val devopsOss = Project("sbt-devops-oss", file("devops-oss"))
       })
       .evaluated,
     sbtTestDirectory := target.value / "sbt-test",
+  )
+
+lazy val `devops-notify` = project
+  .enablePlugins(ScalaNativePlugin)
+  .settings(
+    scalaVersion := scala213,
+    // Set to false or remove if you want to show stubs as linking errors
+    nativeLinkStubs := true,
+    libraryDependencies ++= Seq(
+      "com.softwaremill.sttp.client3" %% "core" % "3.3.14",
+      "com.lihaoyi" %% "ujson" % "1.4.1",
+    )
   )
 
 inThisBuild(

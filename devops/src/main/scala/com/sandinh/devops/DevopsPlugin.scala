@@ -9,7 +9,6 @@ import sbt.*
 import sbt.Keys.*
 import sbt.Def.Initialize
 import sbt.io.Using
-import sbtdynver.DynVer
 import sbtdynver.DynVerPlugin.autoImport.*
 
 import java.nio.file.Files
@@ -31,7 +30,6 @@ object DevopsPlugin extends AutoPlugin {
   object autoImport {
     val devopsSetup = taskKey[Unit]("Setup devops stuff")
     val devopsQA = taskKey[Unit]("QA (Quality Assurance)")
-    val devopsNotify = taskKey[Unit]("Mattermost/ Slack notify")
     val devopsNexusHost = settingKey[String](
       "Your private nexus host, ex repo.example.com. Not used in devops-oss"
     )
@@ -50,6 +48,11 @@ object DevopsPlugin extends AutoPlugin {
 
   private val inAny = ScopeFilter(inAnyProject, inAnyConfiguration)
 
+  private val savePublishInfo = taskKey[Unit](
+    "Save publish info into a file to be used in later Mattermost/ Slack notify CI job"
+  )
+  private val publishInfoPath = "publish.info"
+
   override lazy val globalSettings: Seq[Setting[?]] = Seq(
     devopsSetup := sdSetupTask.value,
     devopsQA := {
@@ -66,7 +69,7 @@ object DevopsPlugin extends AutoPlugin {
           |RECOMMEND: git commit or stash all changes before formatting.""".stripMargin
       )
     },
-    devopsNotify := sdMmNotifyTask.value,
+    savePublishInfo := savePublishInfoTask.value,
   ) ++ ciReleaseSettings ++ globalSettingsImpl
 
   // see CiReleasePlugin.globalSettings
@@ -78,10 +81,11 @@ object DevopsPlugin extends AutoPlugin {
 
   def ciRelease(state: State): State = {
     println(s"Running ci-release.\n  branch=${env.get("GITHUB_REF")}")
+    IO.write(state.baseDir / publishInfoPath, "")
     if (!isTag) {
       if (isSnapshotVersion(state)) {
         println(s"No tag push, publishing SNAPSHOT")
-        ciReleaseSnapshotCmds ::: state
+        ciReleaseSnapshotCmds ::: "savePublishInfo" :: state
       } else {
         // Happens when a tag is pushed right after merge causing the master branch
         // job to pick up a non-SNAPSHOT version even if isTag=false.
@@ -92,7 +96,7 @@ object DevopsPlugin extends AutoPlugin {
       }
     } else {
       println("Tag push detected, publishing a stable release")
-      ciReleaseCmds ::: state
+      ciReleaseCmds ::: "savePublishInfo" :: state
     }
   }
 
@@ -107,7 +111,7 @@ object DevopsPlugin extends AutoPlugin {
     projectID.value -> (publish / skip).value
   }
 
-  def sdMmNotifyTask: Initialize[Task[Unit]] = Def.task {
+  def savePublishInfoTask: Initialize[Task[Unit]] = Def.task {
     val version = projectAndSkip
       .all(ScopeFilter(inAnyProject))
       .value
@@ -115,7 +119,7 @@ object DevopsPlugin extends AutoPlugin {
       .groupBy(_.revision)
       .map { case (rev, ms) => s"**$rev**: " + ms.map(_.name).mkString(", ") }
       .mkString("\n")
-    Notify(version)
+    IO.write((ThisBuild / baseDirectory).value / publishInfoPath, version)
   }
 
   def sdSetupTask: Initialize[Task[Unit]] = Def.task {
