@@ -117,7 +117,14 @@ lazy val sd = sandinhPrj("sd-devops").dependsOn(devops)
 
 lazy val sdOss = sandinhPrj("sd-devops-oss").dependsOn(devopsOss)
 
+lazy val `sd-matrix` = project
+  .enablePlugins(SbtPlugin)
+  .settings(
+    pluginCrossBuild / sbtVersion := "1.5.5",
+    addSbtPlugin("com.eed3si9n" % "sbt-projectmatrix" % "0.8.0"),
+  )
+
 lazy val `sbt-devops-root` = project
   .in(file("."))
   .settings(skipPublish)
-  .aggregate(devops, devopsOss, sd, sdOss, `devops-notify`)
+  .aggregate(devops, devopsOss, sd, sdOss, `devops-notify`, `sd-matrix`)
