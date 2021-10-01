@@ -1,3 +1,4 @@
+import sbtdocker.DockerKeys.dockerPush
 import scala.sys.env
 import scala.sys.process._
 
@@ -33,10 +34,6 @@ lazy val commonDeps = Seq(
   addSbtPlugin("org.scalameta" % "sbt-scalafmt" % "2.4.3"),
   addSbtPlugin("com.dwijnand" % "sbt-dynver" % "4.1.1"),
   addSbtPlugin("com.typesafe.sbt" % "sbt-git" % "1.0.1"),
-  libraryDependencies ++= Seq(
-    "com.lihaoyi" %% "requests" % "0.6.9",
-    "com.lihaoyi" %% "ujson" % "1.4.1",
-  )
 )
 
 lazy val devops = Project("sbt-devops", file("devops"))
@@ -63,6 +60,35 @@ lazy val devopsOss = Project("sbt-devops-oss", file("devops-oss"))
       .evaluated,
     sbtTestDirectory := target.value / "sbt-test",
   )
+
+lazy val `devops-notify` = project
+  .enablePlugins(DockerPlugin)
+  .settings(
+    scalaVersion := scala213,
+    libraryDependencies ++= Seq(
+      "com.softwaremill.sttp.client3" %% "upickle" % "3.3.14",
+    ),
+    assembly / mainClass := Some("com.sandinh.devops.Notify"),
+    assembly / assemblyOutputPath := target.value / "notify.jar",
+    docker := docker.dependsOn(assembly).value,
+    docker / dockerfile := NativeDockerfile(baseDirectory.value / "Dockerfile"),
+    docker / imageNames := {
+      val tags =
+        if (isSnapshot.value) Seq("edge")
+        else Seq("latest", version.value)
+      val name = moduleName.value
+      tags.map(tag => ImageName(s"ohze/$name:$tag"))
+    },
+    dockerPush := dockerPush.dependsOn(dockerLogin).value
+  )
+
+def dockerLogin = Def.task {
+  val log = streams.value.log
+  log.info("docker login ...")
+  val pw = s"echo ${env("DOCKER_PASSWORD")}"
+  val login = s"docker login -u ${env("DOCKER_USERNAME")} --password-stdin"
+  log.info((pw #| login).!!)
+}
 
 inThisBuild(
   Seq(
@@ -93,4 +119,4 @@ lazy val sdOss = sandinhPrj("sd-devops-oss").dependsOn(devopsOss)
 lazy val `sbt-devops-root` = project
   .in(file("."))
   .settings(skipPublish)
-  .aggregate(devops, devopsOss, sd, sdOss)
+  .aggregate(devops, devopsOss, sd, sdOss, `devops-notify`)

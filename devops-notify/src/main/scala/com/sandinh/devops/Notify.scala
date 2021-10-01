@@ -1,13 +1,22 @@
 package com.sandinh.devops
 
-import sbt.file
-import requests.Response
-import Utils.{EnvOps, boom, envKeys}
+import sttp.client3.*
+import sttp.client3.upickle.*
+import java.nio.file.Paths
 import scala.collection.immutable.Seq
 import scala.sys.env
+import scala.util.control.NonFatal
+import sys.process.*
 
 object Notify {
-  private case class Job(name: String, result: String) {
+  def main(args: Array[String]): Unit = Notify()
+
+  private case class Job(
+      name: String,
+      result: String,
+      info: Option[String],
+      commitMsg: Option[String],
+  ) {
     def emoji: String = result match {
       case "success"   => ":white_check_mark:"
       case "failure"   => ":x:"
@@ -19,25 +28,23 @@ object Notify {
 
     def isFailure: Boolean = result == "failure"
 
-    private def publishSuccess = name == "publish" && result == "success"
-
-    def asAttachmentField(version: String): ujson.Obj = ujson.Obj(
+    def asAttachmentField: ujson.Obj = ujson.Obj(
       "short" -> true,
       "title" -> name,
-      "value" -> (if (publishSuccess) s"$emoji $version" else emoji)
+      "value" -> info.fold(emoji)(s => s"$emoji $s")
     )
 
     override def toString: String = s"$name: $result"
   }
 
-  private def commitMsg = {
-    import sys.process.*
-    s"git show -s --format=%s ${env("GITHUB_SHA")}".!!.trim
+  private def commitMsg: String = {
+    val sha = env("GITHUB_SHA")
+    try s"git show -s --format=%s $sha".!!.trim
+    catch { case NonFatal(_) => sha.substring(0, 8) }
   }
 
   // https://developers.mattermost.com/integrate/incoming-webhooks/#parameters
-  /** @param versionMsg is only used as attachments/ fields / value message */
-  def apply(versionMsg: String): Response = {
+  def apply(): Response[Either[String, String]] = {
     val webhook = env
       .any("WEBHOOK_URL")
       .getOrElse(boom(s"None of ${envKeys("WEBHOOK_URL")} env is set"))
@@ -50,21 +57,29 @@ object Notify {
     val jobs = for {
       v <- env.get("_DEVOPS_NEEDS").toSeq
       (jobName, job) <- ujson.read(v).obj
-    } yield Job(jobName, job.obj("result").str)
+      outputs = job.obj("outputs").obj
+    } yield Job(
+      jobName,
+      job.obj("result").str,
+      outputs.get("info").map(_.str),
+      outputs.get("commitMsg").map(_.str.trim),
+    )
+
+    def commit = jobs.flatMap(_.commitMsg).headOption.getOrElse(commitMsg)
 
     val text = env("GITHUB_EVENT_NAME") match {
       case "pull_request" =>
-        val payloadFile = file(env("GITHUB_EVENT_PATH"))
-        val pr = ujson.read(payloadFile).obj("number").num.toLong
+        val payloadPath = Paths.get(env("GITHUB_EVENT_PATH"))
+        val pr = ujson.read(payloadPath).obj("number").num.toLong
         s"pull request [#$pr]($home/pull/$pr)"
-      case _ => s"commit: $commitMsg"
+      case _ => s"commit: $commit"
     }
     val attachment = ujson.Obj(
       "fallback" -> jobs.mkString("CI jobs status: ", ", ", ""),
       "author_name" -> env("GITHUB_REPOSITORY"),
       "author_icon" -> "https://chat.ohze.net/api/v4/emoji/tu6nrabuftrk78rm78mapoq7to/image",
       "text" -> s"[CI jobs status]($link) for $text",
-      "fields" -> jobs.map(_.asAttachmentField(versionMsg)),
+      "fields" -> jobs.map(_.asAttachmentField),
     )
     env.any("PRETEXT").foreach(attachment("pretext") = _)
     if (jobs.exists(_.isFailure)) attachment("color") = "#FF0000"
@@ -86,6 +101,24 @@ object Notify {
       value <- env.any(keySuffix)
     } data(field) = value
 
-    requests.post(webhook, data = data)
+    val backend = HttpURLConnectionBackend()
+
+    emptyRequest
+      .body(data)
+      .post(uri"$webhook")
+      .send(backend)
+  }
+
+  final class MessageOnlyException(override val toString: String)
+      extends RuntimeException(toString)
+  def boom(msg: String) = throw new MessageOnlyException(msg)
+
+  private[devops] def envKeys(suffix: String): Seq[String] =
+    Seq("MATTERMOST_", "SLACK_", "DEVOPS_").map(_ + suffix)
+
+  private[devops] implicit class EnvOps(val m: Map[String, String])
+      extends AnyVal {
+    def any(keySuffix: String): Option[String] =
+      envKeys(keySuffix).flatMap(m.get).headOption
   }
 }

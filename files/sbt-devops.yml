@@ -30,27 +30,30 @@ jobs:
     needs: build
     # if: publish-condition
     runs-on: ubuntu-20.04
+    outputs:
+      info: ${{ steps.info.outputs.info }}
+      commitMsg: ${{ steps.commitMsg.outputs.msg }}
     steps:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
+      - id: commitMsg
+        run: echo "::set-output name=msg::$(git show -s --format=%s $GITHUB_SHA)"
       - uses: actions/setup-java@v2
         with:
           distribution: 'temurin'
           java-version: '8'
       - run: sbt ci-release
         # env: ci-release
+      - id: info
+        run: echo "::set-output name=info::$(cat "$GITHUB_WORKSPACE/target/publish.info")"
 
   notify:
     needs: [build, publish]
     if: always()
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-      - uses: coursier/cache-action@v6
-      - run: sbt devopsNotify
+      - uses: docker://ohze/devops-notify
         env:
           # You can use `DEVOPS_` | `SLACK_` prefix for `MATTERMOST_*` envs below
           # ex SLACK_WEBHOOK_URL instead of MATTERMOST_WEBHOOK_URL
