@@ -72,7 +72,7 @@ object Notify {
         val payloadPath = Paths.get(env("GITHUB_EVENT_PATH"))
         val pr = ujson.read(payloadPath).obj("number").num.toLong
         s"pull request [#$pr]($home/pull/$pr)"
-      case _ => s"commit: $commit"
+      case _ => s"commit: [$commit]($home/commit/${env("GITHUB_SHA")})"
     }
     val attachment = ujson.Obj(
       "fallback" -> jobs.mkString("CI jobs status: ", ", ", ""),
