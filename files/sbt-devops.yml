@@ -4,12 +4,16 @@ on: [push, pull_request]
 jobs:
   build:
     runs-on: ubuntu-20.04
+    outputs:
+      commitMsg: ${{ steps.commitMsg.outputs.msg }}
     strategy:
       matrix:
         java: [ '8', '11', '17' ]
         scala: [ '2.11.12', '2.12.15', '2.13.6', '3.0.2' ]
     steps:
       - uses: actions/checkout@v2
+      - id: commitMsg
+        run: echo "::set-output name=msg::$(git show -s --format=%s $GITHUB_SHA)"
       - uses: actions/setup-java@v2
         with:
           java-version: ${{ matrix.java }}
@@ -32,13 +36,10 @@ jobs:
     runs-on: ubuntu-20.04
     outputs:
       info: ${{ steps.info.outputs.info }}
-      commitMsg: ${{ steps.commitMsg.outputs.msg }}
     steps:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
-      - id: commitMsg
-        run: echo "::set-output name=msg::$(git show -s --format=%s $GITHUB_SHA)"
       - uses: actions/setup-java@v2
         with:
           distribution: 'temurin'
