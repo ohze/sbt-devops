@@ -1,3 +1,6 @@
+import com.sandinh.devops.DevopsPlugin.qaVersionTask
+TaskKey[Unit]("qaVersion") := qaVersionTask.all(ScopeFilter(inAnyProject)).value
+
 lazy val prjA = project
 lazy val prjB = project
 

@@ -59,7 +59,7 @@ object DevopsPlugin extends AutoPlugin {
       // <task>.value macro causing spurious “a pure expression does nothing” warning
       // This `val _ =` is not need if we set `pluginCrossBuild` to a newer sbt version
       val _ = sdQaBaseTask.value
-      val __ = dynverAssertVersion.all(ScopeFilter(inAnyProject)).value
+      val __ = qaVersionTask.all(ScopeFilter(inAnyProject)).value
       val fmtOk = scalafmtCheck.?.all(inAny).result.value.isSuccess
       val sbtOk = scalafmtSbtCheck.?.all(inAny).result.value.isSuccess
       orBoom(
@@ -100,12 +100,16 @@ object DevopsPlugin extends AutoPlugin {
     }
   }
 
-  override lazy val projectSettings: Seq[Setting[?]] = Seq(
-    dynverAssertVersion := orBoom(
-      version.value == (ThisBuild / dynver).value,
+  override lazy val projectSettings: Seq[Setting[?]] = projectSettingsImpl
+
+  def qaVersionTask: Initialize[Task[Unit]] = Def.task {
+    val dynver = (ThisBuild / dynverInstance).value
+    val date = (ThisBuild / dynverCurrentDate).value
+    orBoom(
+      version.value == dynver.sonatypeVersion(date),
       s"Project ${name.value} define `version` manually!"
-    ),
-  ) ++ projectSettingsImpl
+    )
+  }
 
   private val projectAndSkip = Def.task {
     projectID.value -> (publish / skip).value

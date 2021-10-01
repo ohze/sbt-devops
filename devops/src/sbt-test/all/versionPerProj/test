@@ -1,11 +1,4 @@
-# dynverAssertVersion verify: version == ThisBuild / dynver
-# But `ThisBuild / dynver` is a task and `version` is a setting
-# `version` is initialized at sbt loading time, depends on `dynverCurrentDate`
-# and `dynver` is dynamically changed base on `new Date`
-# see sbtdynver.DynVerPlugin.buildSettings
-# So we need to `reload` here
-> reload
-> dynverAssertVersion
+> qaVersion
 $ exec git init
 $ exec git config user.email "thanbv@sandinh.net"
 $ exec git config user.name "Bui Viet Thanh"
