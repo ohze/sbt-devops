@@ -5,11 +5,18 @@ import sttp.client3.upickle.*
 import java.nio.file.Paths
 import scala.collection.immutable.Seq
 import scala.sys.env
+import scala.util.control.NonFatal
+import sys.process.*
 
 object Notify {
   def main(args: Array[String]): Unit = Notify()
 
-  private case class Job(name: String, result: String, info: Option[String]) {
+  private case class Job(
+      name: String,
+      result: String,
+      info: Option[String],
+      commitMsg: Option[String],
+  ) {
     def emoji: String = result match {
       case "success"   => ":white_check_mark:"
       case "failure"   => ":x:"
@@ -31,8 +38,9 @@ object Notify {
   }
 
   private def commitMsg: String = {
-    import sys.process.*
-    s"git show -s --format=%s ${env("GITHUB_SHA")}".!!.trim
+    val sha = env("GITHUB_SHA")
+    try s"git show -s --format=%s $sha".!!.trim
+    catch { case NonFatal(_) => sha.substring(0, 8) }
   }
 
   // https://developers.mattermost.com/integrate/incoming-webhooks/#parameters
@@ -49,18 +57,22 @@ object Notify {
     val jobs = for {
       v <- env.get("_DEVOPS_NEEDS").toSeq
       (jobName, job) <- ujson.read(v).obj
+      outputs = job.obj("outputs").obj
     } yield Job(
       jobName,
       job.obj("result").str,
-      job.obj("outputs").obj.get("info").map(_.str)
+      outputs.get("info").map(_.str),
+      outputs.get("commitMsg").map(_.str.trim),
     )
+
+    def commit = jobs.flatMap(_.commitMsg).headOption.getOrElse(commitMsg)
 
     val text = env("GITHUB_EVENT_NAME") match {
       case "pull_request" =>
         val payloadPath = Paths.get(env("GITHUB_EVENT_PATH"))
         val pr = ujson.read(payloadPath).obj("number").num.toLong
         s"pull request [#$pr]($home/pull/$pr)"
-      case _ => s"commit: $commitMsg"
+      case _ => s"commit: $commit"
     }
     val attachment = ujson.Obj(
       "fallback" -> jobs.mkString("CI jobs status: ", ", ", ""),

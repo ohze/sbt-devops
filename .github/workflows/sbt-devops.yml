@@ -36,10 +36,13 @@ jobs:
     runs-on: ubuntu-20.04
     outputs:
       info: ${{ steps.info.outputs.info }}
+      commitMsg: ${{ steps.commitMsg.outputs.msg }}
     steps:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
+      - id: commitMsg
+        run: echo "::set-output name=msg::$(git show -s --format=%s $GITHUB_SHA)"
       - uses: actions/setup-java@v2
         with:
           distribution: 'temurin'
