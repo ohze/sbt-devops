@@ -76,7 +76,7 @@ lazy val `devops-notify` = project
     docker / imageNames := {
       val tags =
         if (isSnapshot.value) Seq("edge")
-        else Seq("latest", version.value)
+        else Seq("edge", "latest", version.value)
       val name = moduleName.value
       tags.map(tag => ImageName(s"ohze/$name:$tag"))
     },
