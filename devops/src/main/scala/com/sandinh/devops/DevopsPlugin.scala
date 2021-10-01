@@ -51,7 +51,7 @@ object DevopsPlugin extends AutoPlugin {
   private val savePublishInfo = taskKey[Unit](
     "Save publish info into a file to be used in later Mattermost/ Slack notify CI job"
   )
-  private val publishInfoPath = "publish.info"
+  private val publishInfoPath = "target/publish.info"
 
   override lazy val globalSettings: Seq[Setting[?]] = Seq(
     devopsSetup := sdSetupTask.value,

@@ -7,11 +7,9 @@ import scala.collection.immutable.Seq
 import scala.sys.env
 
 object Notify {
-  def main(args: Array[String]): Unit = {
-    ???
-  }
+  def main(args: Array[String]): Unit = Notify()
 
-  private case class Job(name: String, result: String) {
+  private case class Job(name: String, result: String, info: Option[String]) {
     def emoji: String = result match {
       case "success"   => ":white_check_mark:"
       case "failure"   => ":x:"
@@ -23,12 +21,10 @@ object Notify {
 
     def isFailure: Boolean = result == "failure"
 
-    private def publishSuccess = name == "publish" && result == "success"
-
-    def asAttachmentField(version: String): ujson.Obj = ujson.Obj(
+    def asAttachmentField: ujson.Obj = ujson.Obj(
       "short" -> true,
       "title" -> name,
-      "value" -> (if (publishSuccess) s"$emoji $version" else emoji)
+      "value" -> info.fold(emoji)(s => s"$emoji $s")
     )
 
     override def toString: String = s"$name: $result"
@@ -40,8 +36,7 @@ object Notify {
   }
 
   // https://developers.mattermost.com/integrate/incoming-webhooks/#parameters
-  /** @param versionMsg is only used as attachments/ fields / value message */
-  def apply(versionMsg: String): Response[Either[String, String]] = {
+  def apply(): Response[Either[String, String]] = {
     val webhook = env
       .any("WEBHOOK_URL")
       .getOrElse(boom(s"None of ${envKeys("WEBHOOK_URL")} env is set"))
@@ -54,7 +49,11 @@ object Notify {
     val jobs = for {
       v <- env.get("_DEVOPS_NEEDS").toSeq
       (jobName, job) <- ujson.read(v).obj
-    } yield Job(jobName, job.obj("result").str)
+    } yield Job(
+      jobName,
+      job.obj("result").str,
+      job.obj("outputs").obj.get("info").map(_.str)
+    )
 
     val text = env("GITHUB_EVENT_NAME") match {
       case "pull_request" =>
@@ -68,7 +67,7 @@ object Notify {
       "author_name" -> env("GITHUB_REPOSITORY"),
       "author_icon" -> "https://chat.ohze.net/api/v4/emoji/tu6nrabuftrk78rm78mapoq7to/image",
       "text" -> s"[CI jobs status]($link) for $text",
-      "fields" -> jobs.map(_.asAttachmentField(versionMsg)),
+      "fields" -> jobs.map(_.asAttachmentField),
     )
     env.any("PRETEXT").foreach(attachment("pretext") = _)
     if (jobs.exists(_.isFailure)) attachment("color") = "#FF0000"
@@ -90,7 +89,7 @@ object Notify {
       value <- env.any(keySuffix)
     } data(field) = value
 
-    val backend = CurlBackend()
+    val backend = HttpURLConnectionBackend()
 
     emptyRequest
       .body(data)
