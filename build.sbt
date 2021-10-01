@@ -63,6 +63,7 @@ lazy val devopsOss = Project("sbt-devops-oss", file("devops-oss"))
 
 lazy val `devops-notify` = project
   .enablePlugins(DockerPlugin)
+  .settings(skipPublish)
   .settings(
     scalaVersion := scala213,
     libraryDependencies ++= Seq(
