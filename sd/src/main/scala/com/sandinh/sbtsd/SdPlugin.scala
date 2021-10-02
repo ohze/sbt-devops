@@ -5,6 +5,7 @@ import sbt.Keys.*
 import com.sandinh.devops.DevopsPlugin
 import DevopsPlugin.autoImport.devopsNexusHost
 import scala.collection.immutable.Seq
+import scala.collection.Seq as CSeq
 import scala.collection.mutable.ListBuffer
 
 object SdPlugin extends AutoPlugin {
@@ -22,6 +23,14 @@ object SdPlugin extends AutoPlugin {
 
     val scalaColCompat: ModuleID =
       "org.scala-lang.modules" %% "scala-collection-compat" % "2.5.0"
+
+    /** We should use {{{
+      * libraryDependencies ++= scalatest("-funsuite", "-mustmatchers")
+      * }}}
+      */
+    def scalatest(modules: String*): CSeq[ModuleID] = modules.map { m =>
+      "org.scalatest" %% s"scalatest$m" % "3.2.10" % Test
+    }
   }
 
   def silencer(m: String): ModuleID =
