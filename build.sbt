@@ -8,8 +8,8 @@ def currentBranch: String =
     case Some(ref)       => ref
   }
 
-lazy val pluginSettings = Seq(
-  pluginCrossBuild / sbtVersion := "1.3.13", // minimum sbt version
+def pluginSettings(minSbtVersion: String) = Seq(
+  pluginCrossBuild / sbtVersion := minSbtVersion,
   scriptedLaunchOpts ++= Seq(
     "-Xmx1024M",
     s"-Ddevops.branch=$currentBranch",
@@ -38,15 +38,15 @@ lazy val commonDeps = Seq(
 
 lazy val devops = Project("sbt-devops", file("devops"))
   .enablePlugins(SbtPlugin)
-  .settings(pluginSettings ++ commonDeps)
   .settings(
+    pluginSettings("1.3.13") ++ commonDeps,
     Compile / unmanagedSourceDirectories += (Compile / scalaSource).value.getParentFile / "nexus",
   )
 
 lazy val devopsOss = Project("sbt-devops-oss", file("devops-oss"))
   .enablePlugins(SbtPlugin)
-  .settings(pluginSettings ++ commonDeps)
   .settings(
+    pluginSettings("1.3.13") ++ commonDeps,
     addSbtPlugin("org.xerial.sbt" % "sbt-sonatype" % "3.9.10"),
     addSbtPlugin("com.github.sbt" % "sbt-pgp" % "2.1.2"),
     Compile / unmanagedSourceDirectories += (devops / Compile / scalaSource).value,
@@ -63,8 +63,8 @@ lazy val devopsOss = Project("sbt-devops-oss", file("devops-oss"))
 
 lazy val `devops-notify` = project
   .enablePlugins(DockerPlugin)
-  .settings(skipPublish)
   .settings(
+    skipPublish,
     scalaVersion := scala213,
     libraryDependencies ++= Seq(
       "com.softwaremill.sttp.client3" %% "upickle" % "3.3.14",
@@ -109,7 +109,7 @@ inThisBuild(
 def sandinhPrj(id: String) = Project(id, file("sd"))
   .enablePlugins(SbtPlugin)
   .settings(
-    pluginCrossBuild / sbtVersion := "1.5.5",
+    pluginSettings("1.5.5"),
     target := target.value / id,
   )
 

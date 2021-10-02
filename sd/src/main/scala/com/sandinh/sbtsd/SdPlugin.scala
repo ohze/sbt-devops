@@ -38,6 +38,8 @@ object SdPlugin extends AutoPlugin {
   override def projectSettings: Seq[Setting[?]] = Seq(
     scalacOptions ++= sdScalacOptions(scalaVersion.value),
     Compile / scalacOptions ++= fatalWarnings(scalaBinaryVersion.value),
+    Test / scalacOptions -= "-Xfatal-warnings",
+    Compile / doc / scalacOptions -= "-Xfatal-warnings",
     libraryDependencies ++= silencerDeps(scalaBinaryVersion.value),
   )
 
