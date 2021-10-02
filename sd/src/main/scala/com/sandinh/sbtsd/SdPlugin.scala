@@ -28,7 +28,16 @@ object SdPlugin extends AutoPlugin {
   )
 
   override def projectSettings: Seq[Setting[?]] = Seq(
-    scalacOptions ++= sdScalacOptions(scalaVersion.value)
+    scalacOptions ++= sdScalacOptions(scalaVersion.value),
+    Compile / scalacOptions ++= (scalaBinaryVersion.value match {
+      // scala 2.11 don't support -Wconf.
+      // So, for convenience, we don't add -Xfatal-warnings
+      case "2.11" => Nil
+      // TODO enable -Xfatal-warnings when this is RELEASED in scala3:
+      // https://github.com/lampepfl/dotty/pull/12857
+      case "3" => Nil
+      case _   => Seq("-Xfatal-warnings")
+    }),
   )
 
   val skipPublish: Seq[Setting[?]] = Seq(
@@ -39,6 +48,8 @@ object SdPlugin extends AutoPlugin {
   /** @param scalaVersion scala version. Ex 2.11.12, 3.1.0-RC2,..
     * @return default scalacOptions for all sandinh's projects
     * @see [[https://docs.scala-lang.org/scala3/guides/migration/options-lookup.html Compiler Options Lookup Table]]
+    * @see [[https://www.scala-lang.org/2021/01/12/configuring-and-suppressing-warnings.html Configuring and suppressing warnings]]
+    * @see [[https://github.com/lampepfl/dotty/pull/12857 Support -Wconf and @nowarn in scala3]]
     */
   def sdScalacOptions(scalaVersion: String): Seq[String] = {
     val Some((major, minor)) = CrossVersion.scalaApiVersion(scalaVersion)
@@ -46,7 +57,6 @@ object SdPlugin extends AutoPlugin {
       "-encoding", "UTF-8", // format: on
       "-deprecation",
       "-feature",
-      "-Xfatal-warnings",
     )
     if ((major, minor) == (2, 11)) opts += "-Ybackend:GenBCode"
     if (major == 2 && minor < 13) opts += "-target:jvm-1.8"
