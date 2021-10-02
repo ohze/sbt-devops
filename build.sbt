@@ -50,16 +50,17 @@ lazy val devopsOss = Project("sbt-devops-oss", file("devops-oss"))
     addSbtPlugin("org.xerial.sbt" % "sbt-sonatype" % "3.9.10"),
     addSbtPlugin("com.github.sbt" % "sbt-pgp" % "2.1.2"),
     Compile / unmanagedSourceDirectories += (devops / Compile / scalaSource).value,
-    scripted := scripted
-      .dependsOn(Def.task {
-        IO.copyDirectory(
-          (devops / sbtTestDirectory).value,
-          target.value / "sbt-test"
-        )
-      })
-      .evaluated,
-    sbtTestDirectory := target.value / "sbt-test",
+    duplicateSbtTest(devops),
   )
+
+def duplicateSbtTest(p: Project) = Seq(
+  sbtTestDirectory := target.value / "sbt-test",
+  scripted := scripted
+    .dependsOn(Def.task {
+      IO.copyDirectory((p / sbtTestDirectory).value, target.value / "sbt-test")
+    })
+    .evaluated,
+)
 
 lazy val `devops-notify` = project
   .enablePlugins(DockerPlugin)
@@ -115,7 +116,9 @@ def sandinhPrj(id: String) = Project(id, file("sd"))
 
 lazy val sd = sandinhPrj("sd-devops").dependsOn(devops)
 
-lazy val sdOss = sandinhPrj("sd-devops-oss").dependsOn(devopsOss)
+lazy val sdOss = sandinhPrj("sd-devops-oss")
+  .dependsOn(devopsOss)
+  .settings(duplicateSbtTest(sd))
 
 lazy val `sd-matrix` = project
   .enablePlugins(SbtPlugin)
