@@ -50,7 +50,8 @@ object SdPlugin extends AutoPlugin {
     )
     if ((major, minor) == (2, 11)) opts += "-Ybackend:GenBCode"
     if (major == 2 && minor < 13) opts += "-target:jvm-1.8"
-    if (major == 2) opts ++= Seq("-Xsource:3")
+    // scala 2.11.12 still not support -Xsource:3
+    if (major == 2 && minor > 11) opts += "-Xsource:3"
     opts.result()
   }
 }
