@@ -30,14 +30,12 @@ object SdPlugin extends AutoPlugin {
   override def projectSettings: Seq[Setting[?]] = Seq(
     scalacOptions ++= sdScalacOptions(scalaVersion.value),
     Compile / scalacOptions ++= (scalaBinaryVersion.value match {
-      // scala 2.11 don't support -Wconf.
-      // So, for convenience, we don't add -Xfatal-warnings
-      case "2.11" => Nil
       // TODO enable -Xfatal-warnings when this is RELEASED in scala3:
       // https://github.com/lampepfl/dotty/pull/12857
       case "3" => Nil
       case _   => Seq("-Xfatal-warnings")
     }),
+    libraryDependencies ++= silencerAndColCompat(scalaBinaryVersion.value),
   )
 
   val skipPublish: Seq[Setting[?]] = Seq(
@@ -64,4 +62,15 @@ object SdPlugin extends AutoPlugin {
     if (major == 2 && minor > 11) opts += "-Xsource:3"
     opts.result()
   }
+
+  def silencerAndColCompat(scalaBinVersion: String): Seq[ModuleID] = {
+    val silencers = // https://github.com/ghik/silencer
+      if (scalaBinVersion != "2.11") Nil
+      else Seq(compilerPlugin(silencer("plugin")), silencer("lib") % Provided)
+    silencers ++
+      Seq("org.scala-lang.modules" %% "scala-collection-compat" % "2.5.0")
+  }
+
+  private def silencer(m: String) =
+    "com.github.ghik" % s"silencer-$m" % "1.7.6" cross CrossVersion.full
 }
