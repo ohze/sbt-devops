@@ -2,6 +2,7 @@ package com.sandinh.sbtsd
 
 import sbt.*
 import sbt.Keys.*
+import sbt.Def.Initialize
 import com.sandinh.devops.DevopsPlugin
 import DevopsPlugin.autoImport.devopsNexusHost
 import scala.collection.immutable.Seq
@@ -30,6 +31,19 @@ object SdPlugin extends AutoPlugin {
       */
     def scalatest(modules: String*): CSeq[ModuleID] = modules.map { m =>
       "org.scalatest" %% s"scalatest$m" % "3.2.10" % Test
+    }
+
+    /** Usage example {{{
+      * libraryDependencies ++= specs2("-core")
+      * }}}
+      */
+    def specs2(modules: String*): Initialize[CSeq[ModuleID]] = Def.setting {
+      val specs2Version = scalaBinaryVersion.value match {
+        case "2.11" => "4.10.6"
+        case "3"    => "5.0.0-RC-11"
+        case _      => "4.12.12"
+      }
+      modules.map { m => "org.specs2" %% s"specs2$m" % specs2Version % Test }
     }
 
     /** Test workaround for java 16+ by set `fork := true` and add javaOptions `--add-opens xxx`
