@@ -47,8 +47,8 @@ object SdPlugin extends AutoPlugin {
 
     /** @see other overloaded `addOpensForTest` def */
     def addOpensForTest(opens: Seq[String]): Seq[Setting[?]] = Seq(
-      ThisBuild / Test / fork := javaVersion >= 16,
-      ThisBuild / Test / javaOptions ++= {
+      Test / fork := javaVersion >= 16,
+      Test / javaOptions ++= {
         if (javaVersion < 16) Nil
         else opens.flatMap(s => Seq("--add-opens", s))
       }
