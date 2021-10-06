@@ -31,6 +31,28 @@ object SdPlugin extends AutoPlugin {
     def scalatest(modules: String*): CSeq[ModuleID] = modules.map { m =>
       "org.scalatest" %% s"scalatest$m" % "3.2.10" % Test
     }
+
+    /** Test workaround for java 16+ by set `fork := true` and add javaOptions `--add-opens xxx`
+      * @param open Default opens java.base/java.lang for java 16+ to workaround errors while test such as:
+      * {{{
+      *   InaccessibleObjectException: Unable to make protected final java.lang.Class
+      *   java.lang.ClassLoader.defineClass(java.lang.String,byte[],int,int,java.security.ProtectionDomain)
+      *   throws java.lang.ClassFormatError accessible:
+      *   module java.base does not "opens java.lang" to unnamed module @42a6eabd (ReflectUtils.java:61)
+      * }}}
+      */
+    def addOpensForTest(
+        open: String = "java.base/java.lang=ALL-UNNAMED"
+    ): Seq[Setting[?]] = addOpensForTest(Seq(open))
+
+    /** @see other overloaded `addOpensForTest` def */
+    def addOpensForTest(opens: Seq[String]): Seq[Setting[?]] = Seq(
+      ThisBuild / Test / fork := javaVersion >= 16,
+      ThisBuild / Test / javaOptions ++= {
+        if (javaVersion < 16) Nil
+        else opens.flatMap(s => Seq("--add-opens", s))
+      }
+    )
   }
 
   def silencer(m: String): ModuleID =
@@ -79,10 +101,18 @@ object SdPlugin extends AutoPlugin {
   }
 
   def fatalWarnings(scalaBinVersion: String): Seq[String] =
-    (scalaBinVersion match {
+    scalaBinVersion match {
       // TODO enable -Xfatal-warnings when this is RELEASED in scala3:
       // https://github.com/lampepfl/dotty/pull/12857
       case "3" => Nil
       case _   => Seq("-Xfatal-warnings")
-    })
+    }
+
+  /** @throws java.lang.NumberFormatException  If the string does not contain a parsable `Int`. */
+  def javaVersion: Int = scala.sys
+    .props("java.specification.version")
+    .split('.')
+    .dropWhile(_ == "1")
+    .head
+    .toInt
 }
