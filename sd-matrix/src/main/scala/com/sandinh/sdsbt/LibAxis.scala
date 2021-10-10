@@ -8,10 +8,15 @@ object LibAxis {
     case _ => sys.error(s"invalid play version $version")
   }
 
-  def apply(version: String): LibAxis = LibAxis(version, binVersion(version))
+  def apply(name: String, version: String): LibAxis =
+    LibAxis(name, version, binVersion(version))
+
+  /** LibAxis for versions.head will have `suffix` == "" */
+  def apply(name: String, versions: Seq[String]): Seq[LibAxis] =
+    LibAxis(name, versions.head, "") +: versions.tail.map(LibAxis(name, _))
 }
 
-case class LibAxis(version: String, suffix: String)
+case class LibAxis(name: String, version: String, suffix: String)
     extends VirtualAxis.WeakAxis {
   import LibAxis.*
 

@@ -14,6 +14,8 @@ object SdMatrixPlugin extends AutoPlugin {
 
   object autoImport {
 
+    lazy val configAxis = settingKey[LibAxis]("Current typesafe config LibAxis")
+
     /** Usage example: {{{
       *   libraryDependencies ++= Seq(
       *     "com.sandinh" %% s"mqtt-proto${akkaAxis.value.suffix}" % "1.10.1",
@@ -36,10 +38,12 @@ object SdMatrixPlugin extends AutoPlugin {
       */
     lazy val playAxis = settingKey[LibAxis]("Current play LibAxis")
 
-    val (akka25, akka26) = (LibAxis("2.5.32"), LibAxis("2.6.16", ""))
+    val Seq(config13, config14) = LibAxis("config", Seq("1.4.1", "1.3.4"))
 
-    val (play26, play27, play28) =
-      (LibAxis("2.6.25"), LibAxis("2.7.9"), LibAxis("2.8.8", ""))
+    val Seq(akka25, akka26) = LibAxis("akka", Seq("2.6.16", "2.5.32"))
+
+    val Seq(play26, play27, play28) =
+      LibAxis("play", Seq("2.8.8", "2.7.9", "2.6.25"))
 
     /** Usage example: {{{
       *   libraryDependencies ++= akka("actor", "testkit" -> Test).value
@@ -80,6 +84,18 @@ object SdMatrixPlugin extends AutoPlugin {
         }
     }
 
+    def configFromAkka = configAxis := (akkaAxis.value match {
+      case `akka25` => config13
+      case `akka26` => config14
+      case lib      => sys.error(s"Not support $lib")
+    })
+
+    def akkaFromPlay = akkaAxis := (playAxis.value match {
+      case `play26` | `play27` => akka25
+      case `play28`            => akka26
+      case lib                 => sys.error(s"Not support $lib")
+    })
+
     implicit class ProjectMatrixOps(val p: ProjectMatrix) extends AnyVal {
       def libAxis(
           lib: LibAxis,
@@ -97,6 +113,17 @@ object SdMatrixPlugin extends AutoPlugin {
             )
         )
 
+      def configAxis(
+          lib: LibAxis,
+          scalaVersions: Seq[String],
+          process: Project => Project = identity,
+      ): ProjectMatrix =
+        libAxis(
+          lib,
+          scalaVersions,
+          p => process(p.settings(autoImport.configAxis := lib))
+        )
+
       def akkaAxis(
           lib: LibAxis,
           scalaVersions: Seq[String],
@@ -105,7 +132,7 @@ object SdMatrixPlugin extends AutoPlugin {
         libAxis(
           lib,
           scalaVersions,
-          p => process(p.settings(autoImport.akkaAxis := lib))
+          p => process(p.settings(autoImport.akkaAxis := lib, configFromAkka))
         )
 
       def playAxis(
@@ -120,11 +147,8 @@ object SdMatrixPlugin extends AutoPlugin {
             process(
               p.settings(
                 autoImport.playAxis := lib,
-                autoImport.akkaAxis := (lib match {
-                  case `play26` | `play27` => akka25
-                  case `play28`            => akka26
-                  case _                   => sys.error(s"Not support $lib")
-                }),
+                akkaFromPlay,
+                configFromAkka,
               )
             )
         )
