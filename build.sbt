@@ -84,14 +84,6 @@ lazy val `devops-notify` = project
     dockerPush := dockerPush.dependsOn(dockerLogin).value
   )
 
-def dockerLogin = Def.task {
-  val log = streams.value.log
-  log.info("docker login ...")
-  val pw = s"echo ${env("DOCKER_PASSWORD")}"
-  val login = s"docker login -u ${env("DOCKER_USERNAME")} --password-stdin"
-  log.info((pw #| login).!!)
-}
-
 inThisBuild(
   Seq(
     versionScheme := Some("semver-spec"),

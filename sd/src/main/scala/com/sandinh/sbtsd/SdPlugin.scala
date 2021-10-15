@@ -8,10 +8,12 @@ import DevopsPlugin.autoImport.devopsNexusHost
 import scala.collection.immutable.Seq
 import scala.collection.Seq as CSeq
 import scala.collection.mutable.ListBuffer
+import scala.sys.env
 
 object SdPlugin extends AutoPlugin {
   override def trigger = allRequirements
   override def requires: Plugins = DevopsPlugin
+  val isOss: Boolean = DevopsPlugin.isOss
 
   object autoImport {
     val (scala211, scala212, scala213, scala3) =
@@ -67,6 +69,27 @@ object SdPlugin extends AutoPlugin {
         else opens.flatMap(s => Seq("--add-opens", s))
       }
     )
+
+    val sdDockerServer = "r.bennuoc.com"
+    def dockerLogin: Initialize[Task[Unit]] = {
+      if (isOss)
+        dockerLoginTask(env("DOCKER_USERNAME"), env("DOCKER_PASSWORD"), "")
+      else dockerLoginTask(env("NEXUS_USER"), env("NEXUS_PASS"), sdDockerServer)
+    }
+  }
+  import autoImport.sdDockerServer
+
+  def dockerLoginTask(
+      username: => String,
+      password: => String,
+      server: String = sdDockerServer
+  ): Initialize[Task[Unit]] = Def.task {
+    import scala.sys.process.*
+    val log = streams.value.log
+    log.info("docker login ...")
+    val login =
+      s"docker login $server -u $username --password-stdin"
+    log.info((s"echo $password" #| login).!!)
   }
 
   def silencer(m: String): ModuleID =

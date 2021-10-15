@@ -21,6 +21,7 @@ import Utils.{gitHubScmInfo, isSnapshotVersion, isTag, orBoom, ResultOps}
 object DevopsPlugin extends AutoPlugin {
   private[this] val impl: ImplTrait = Impl
   import impl.*
+  val isOss: Boolean = impl.isOss
 
   override def trigger = allRequirements
   override def requires = requiresImpl
