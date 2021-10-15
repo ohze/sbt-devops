@@ -39,6 +39,9 @@ object DevopsPlugin extends AutoPlugin {
   override lazy val buildSettings: Seq[Setting[?]] = Seq(
     homepage := scmInfo.value.map(_.browseUrl),
     dynverTagPrefix := "v",
+    // Set to `-` instead of the default `+` so we can use `version` as a docker tag. Otherwise:
+    // foo:0.0.0+142-e89bce19-SNAPSHOT" is not a valid repository/tag: invalid reference format
+    dynverSeparator := "-",
     dynverSonatypeSnapshots := true,
     scmInfo ~= {
       case Some(info) => Some(info)
