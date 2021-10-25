@@ -105,7 +105,7 @@ object SdPlugin extends AutoPlugin {
 
   override def projectSettings: Seq[Setting[?]] = Seq(
     scalacOptions ++= sdScalacOptions(scalaVersion.value),
-    Compile / scalacOptions ++= fatalWarnings(scalaBinaryVersion.value),
+    Compile / scalacOptions += "-Xfatal-warnings",
     Test / scalacOptions -= "-Xfatal-warnings",
     Compile / doc / scalacOptions -= "-Xfatal-warnings",
     libraryDependencies ++= silencerDeps(scalaBinaryVersion.value),
@@ -136,14 +136,6 @@ object SdPlugin extends AutoPlugin {
     if (scalaBinVersion != "2.11") Nil
     else Seq(compilerPlugin(silencer("plugin")), silencer("lib") % Provided)
   }
-
-  def fatalWarnings(scalaBinVersion: String): Seq[String] =
-    scalaBinVersion match {
-      // TODO enable -Xfatal-warnings when this is RELEASED in scala3:
-      // https://github.com/lampepfl/dotty/pull/12857
-      case "3" => Nil
-      case _   => Seq("-Xfatal-warnings")
-    }
 
   /** @throws java.lang.NumberFormatException  If the string does not contain a parsable `Int`. */
   def javaVersion: Int = scala.sys
