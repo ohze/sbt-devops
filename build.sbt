@@ -33,7 +33,7 @@ def scriptedPrepare = Def.task {
 lazy val commonDeps = Seq(
   addSbtPlugin("org.scalameta" % "sbt-scalafmt" % "2.4.3"),
   addSbtPlugin("com.dwijnand" % "sbt-dynver" % "4.1.1"),
-  addSbtPlugin("com.typesafe.sbt" % "sbt-git" % "1.0.1"),
+  addSbtPlugin("com.typesafe.sbt" % "sbt-git" % "1.0.2"),
 )
 
 lazy val devops = Project("sbt-devops", file("devops"))
