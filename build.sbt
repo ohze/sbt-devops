@@ -14,21 +14,11 @@ def pluginSettings(minSbtVersion: String) = Seq(
     "-Xmx1024M",
     s"-Ddevops.branch=$currentBranch",
   ),
-  scripted := scripted.dependsOn(scriptedPrepare).evaluated,
+  scriptedScalatestDependencies ++= Seq(
+    "org.scalatest::scalatest-flatspec:3.2.10",
+    "org.scalatest::scalatest-mustmatchers:3.2.10",
+  ),
 )
-
-def scriptedPrepare = Def.task {
-  for {
-    prjDir <- (
-      PathFinder(sbtTestDirectory.value) * DirectoryFilter * DirectoryFilter
-    ).get()
-  } IO.write(
-    prjDir / "project/plugins.sbt",
-    s"""addSbtPlugin("${organization.value}" % "${moduleName.value}" % "${version.value}")
-       |libraryDependencies += "org.scalameta" %% "munit" % "0.7.29"
-       |""".stripMargin
-  )
-}
 
 lazy val commonDeps = Seq(
   addSbtPlugin("org.scalameta" % "sbt-scalafmt" % "2.4.3"),

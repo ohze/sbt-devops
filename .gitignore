@@ -9,3 +9,4 @@ metals.sbt
 **/project/target/
 **/sbt-test/**/target
 **/sbt-test/*/*/project/plugins.sbt
+**/sbt-test/*/*/project/build.properties

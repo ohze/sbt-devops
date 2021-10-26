@@ -4,11 +4,11 @@ TaskKey[Unit]("qaVersion") := qaVersionTask.all(ScopeFilter(inAnyProject)).value
 lazy val prjA = project
 lazy val prjB = project
 
-import munit.Assertions._
+import org.scalatest.matchers.must.Matchers._
 
 TaskKey[Unit]("check1") := {
-  assertEquals((prjA / version).value, "1.1")
-  assertEquals((prjB / version).value, "1.1")
+  (prjA / version).value mustBe "1.1"
+  (prjB / version).value mustBe "1.1"
 }
 
 def gitVer(num: Int): String = {
