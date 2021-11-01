@@ -71,25 +71,43 @@ object SdPlugin extends AutoPlugin {
     )
 
     val sdDockerServer = "r.bennuoc.com"
-    def dockerLogin: Initialize[Task[Unit]] = {
-      if (isOss)
-        dockerLoginTask(env("DOCKER_USERNAME"), env("DOCKER_PASSWORD"), "")
-      else dockerLoginTask(env("NEXUS_USER"), env("NEXUS_PASS"), sdDockerServer)
-    }
+    val dockerLogin = taskKey[Boolean]("dockerLogin")
   }
-  import autoImport.sdDockerServer
+  import autoImport.*
 
   def dockerLoginTask(
-      username: => String,
-      password: => String,
-      server: String = sdDockerServer
-  ): Initialize[Task[Unit]] = Def.task {
+      username: String,
+      password: String,
+      server: String
+  ): Initialize[Task[Boolean]] = Def.task {
     import scala.sys.process.*
+    import sbt.util.CacheImplicits.*
+
     val log = streams.value.log
-    log.info("docker login ...")
-    val login =
-      s"docker login $server -u $username --password-stdin"
-    log.info((s"echo $password" #| login).!!)
+    dockerLogin.previous match {
+      case None | Some(false) =>
+        log.info("docker login ...")
+        val login = s"docker login $server -u $username --password-stdin"
+        (s"echo $password" #| login).! == 0
+      case Some(true) =>
+        log.info("docker logged in.")
+        true
+    }
+  }
+
+  def dockerLoginTask(
+      userEnv: String,
+      pwEnv: String
+  ): Initialize[Task[Boolean]] = {
+    val server = if (isOss) "" else sdDockerServer
+    (env.get(userEnv), env.get(pwEnv)) match {
+      case (Some(u), Some(p)) => dockerLoginTask(u, p, server)
+      case _ =>
+        Def.task {
+          streams.value.log.warn(s"Env not defined: $userEnv, $pwEnv")
+          false
+        }
+    }
   }
 
   def silencer(m: String): ModuleID =
@@ -97,6 +115,10 @@ object SdPlugin extends AutoPlugin {
 
   override def globalSettings: Seq[Setting[?]] = Seq(
     devopsNexusHost := "repo.bennuoc.com",
+    dockerLogin := {
+      if (isOss) dockerLoginTask("DOCKER_USERNAME", "DOCKER_PASSWORD")
+      else dockerLoginTask("NEXUS_USER", "NEXUS_PASS")
+    }.value,
   )
 
   override lazy val buildSettings: Seq[Setting[?]] = Seq(
