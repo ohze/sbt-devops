@@ -44,7 +44,7 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '8'
-      - run: sbt ci-release
+      - run: sbt versionPolicyCheck ci-release
         # env: ci-release
       - id: info
         run: echo "::set-output name=info::$(cat "$GITHUB_WORKSPACE/target/publish.info")"
