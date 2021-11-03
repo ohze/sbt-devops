@@ -20,10 +20,10 @@ def pluginSettings(minSbtVersion: String) = Seq(
   ),
 )
 
-lazy val commonDeps = Seq(
-  addSbtPlugin("org.scalameta" % "sbt-scalafmt" % "2.4.3"),
-  addSbtPlugin("com.dwijnand" % "sbt-dynver" % "4.1.1"),
-  addSbtPlugin("com.typesafe.sbt" % "sbt-git" % "1.0.2"),
+lazy val commonDeps = addSbtPlugins(
+  "org.scalameta" % "sbt-scalafmt" % "2.4.3",
+  "com.dwijnand" % "sbt-dynver" % "4.1.1",
+  "com.typesafe.sbt" % "sbt-git" % "1.0.2",
 )
 
 lazy val devops = Project("sbt-devops", file("devops"))
@@ -37,8 +37,10 @@ lazy val devopsOss = Project("sbt-devops-oss", file("devops-oss"))
   .enablePlugins(SbtPlugin)
   .settings(
     pluginSettings("1.3.13") ++ commonDeps,
-    addSbtPlugin("org.xerial.sbt" % "sbt-sonatype" % "3.9.10"),
-    addSbtPlugin("com.github.sbt" % "sbt-pgp" % "2.1.2"),
+    addSbtPlugins(
+      "org.xerial.sbt" % "sbt-sonatype" % "3.9.10",
+      "com.github.sbt" % "sbt-pgp" % "2.1.2"
+    ),
     Compile / unmanagedSourceDirectories += (devops / Compile / scalaSource).value,
     duplicateSbtTest(devops),
   )

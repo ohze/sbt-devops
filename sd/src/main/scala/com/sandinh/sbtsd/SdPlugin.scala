@@ -3,6 +3,7 @@ package com.sandinh.sbtsd
 import sbt.*
 import sbt.Keys.*
 import sbt.Def.Initialize
+import sbt.Defaults.sbtPluginExtra
 import com.sandinh.devops.DevopsPlugin
 import DevopsPlugin.autoImport.devopsNexusHost
 import scala.collection.immutable.Seq
@@ -23,6 +24,13 @@ object SdPlugin extends AutoPlugin {
       publish / skip := true,
       publishLocal / skip := true,
     )
+
+    def addSbtPlugins(modules: ModuleID*): Setting[collection.Seq[ModuleID]] =
+      libraryDependencies ++= {
+        val sbtV = (pluginCrossBuild / sbtBinaryVersion).value
+        val scalaV = (update / scalaBinaryVersion).value
+        modules.map(sbtPluginExtra(_, sbtV, scalaV))
+      }
 
     val scalaColCompat: ModuleID =
       "org.scala-lang.modules" %% "scala-collection-compat" % "2.5.0"
