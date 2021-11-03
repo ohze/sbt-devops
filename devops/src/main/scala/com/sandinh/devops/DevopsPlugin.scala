@@ -19,6 +19,7 @@ import scala.sys.env
 import Utils.{ResultOps, gitHubScmInfo, isSnapshotVersion, isTag, orBoom}
 import sbtversionpolicy.SbtVersionPolicyPlugin.autoImport.{
   Compatibility,
+  versionPolicyCheck,
   versionPolicyIgnoredInternalDependencyVersions,
   versionPolicyIntention
 }
@@ -67,10 +68,11 @@ object DevopsPlugin extends AutoPlugin {
   override lazy val globalSettings: Seq[Setting[?]] = Seq(
     devopsSetup := sdSetupTask.value,
     devopsQA := {
-      // <task>.value macro causing spurious “a pure expression does nothing” warning
-      // This `val _ =` is not need if we set `pluginCrossBuild` to a newer sbt version
-      val _ = sdQaBaseTask.value
-      val __ = qaVersionTask.all(ScopeFilter(inAnyProject)).value
+      sdQaBaseTask.value
+      qaVersionTask.all(ScopeFilter(inAnyProject)).value
+      // Only report error. Don't fail devopsQA even if versionPolicyCheck fail
+      versionPolicyCheck.all(ScopeFilter(inAnyProject)).result.value
+
       val fmtOk = scalafmtCheck.?.all(inAny).result.value.isSuccess
       val sbtOk = scalafmtSbtCheck.?.all(inAny).result.value.isSuccess
       orBoom(
