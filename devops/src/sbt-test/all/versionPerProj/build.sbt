@@ -1,8 +1,9 @@
 import com.sandinh.devops.DevopsPlugin.qaVersionTask
 TaskKey[Unit]("qaVersion") := qaVersionTask.all(ScopeFilter(inAnyProject)).value
 
-lazy val prjA = project
-lazy val prjB = project
+versionPolicyCheck / skip := true
+lazy val prjA = project.settings(versionPolicyCheck / skip := true)
+lazy val prjB = project.settings(versionPolicyCheck / skip := true)
 
 import org.scalatest.matchers.must.Matchers._
 

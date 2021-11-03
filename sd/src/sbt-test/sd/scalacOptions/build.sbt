@@ -77,7 +77,10 @@ lazy val prjA = (project in file("."))
         v(Compile / scalacOptions) mustBe base :+ "-Xfatal-warnings"
         v(Compile / compileKey / scalacOptions) mustBe base :+ "-Xfatal-warnings"
         v(Compile / compileIncremental / scalacOptions) mustBe base :+ "-Xfatal-warnings"
-        v(Compile / doc / scalacOptions) mustBe base ++ Seq("-project", "prjA")
+
+        // == base ++ Seq("-project", "prjA") if sbtVersion == 1.5.5
+        // but == Seq("-project", "prjA") if sbtVersion == 1.5.0
+        v(Compile / doc / scalacOptions) mustBe Seq("-project", "prjA")
         v(Test / scalacOptions) mustBe base
       }
 
