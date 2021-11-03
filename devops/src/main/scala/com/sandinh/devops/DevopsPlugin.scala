@@ -16,7 +16,12 @@ import scala.util.matching.Regex
 import scala.collection.JavaConverters.*
 import scala.collection.immutable.Seq
 import scala.sys.env
-import Utils.{gitHubScmInfo, isSnapshotVersion, isTag, orBoom, ResultOps}
+import Utils.{ResultOps, gitHubScmInfo, isSnapshotVersion, isTag, orBoom}
+import sbtversionpolicy.SbtVersionPolicyPlugin.autoImport.{
+  Compatibility,
+  versionPolicyIgnoredInternalDependencyVersions,
+  versionPolicyIntention
+}
 
 object DevopsPlugin extends AutoPlugin {
   private[this] val impl: ImplTrait = Impl
@@ -45,6 +50,11 @@ object DevopsPlugin extends AutoPlugin {
       case Some(info) => Some(info)
       case None       => gitHubScmInfo
     },
+    versionPolicyIntention := Compatibility.BinaryCompatible,
+    // https://github.com/scalacenter/sbt-version-policy#how-to-integrate-with-sbt-dynver
+    versionPolicyIgnoredInternalDependencyVersions := Some(
+      "^\\d+\\.\\d+\\.\\d+\\+\\d+".r
+    ),
   ) ++ buildSettingsImpl
 
   private val inAny = ScopeFilter(inAnyProject, inAnyConfiguration)

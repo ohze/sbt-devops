@@ -24,6 +24,7 @@ lazy val commonDeps = addSbtPlugins(
   "org.scalameta" % "sbt-scalafmt" % "2.4.3",
   "com.dwijnand" % "sbt-dynver" % "4.1.1",
   "com.typesafe.sbt" % "sbt-git" % "1.0.2",
+  "ch.epfl.scala" % "sbt-version-policy" % "2.0.1",
 )
 
 lazy val devops = Project("sbt-devops", file("devops"))
