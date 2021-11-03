@@ -22,6 +22,7 @@ This is a sbt AutoPlugin that do 4 things:
 + You have setup CI, scalafmt
 + Your code is formatted
 + You don't define version manually
++ You don't break binary compatibility with the previous stable version
 + ... see source code for more detail
 
 #### 3. `devopsNotify` task
@@ -81,6 +82,7 @@ This project use:
 [sbt-dynver](https://github.com/dwijnand/sbt-dynver), [sbt-git](https://github.com/sbt/sbt-git),
 [sbt-sonatype](https://github.com/xerial/sbt-sonatype), [sbt-pgp](https://github.com/sbt/sbt-pgp)
 + Copy some code from [sbt-ci-release](https://github.com/sbt/sbt-ci-release) plugins.
++ [sbt-version-policy](https://github.com/scalacenter/sbt-version-policy) and [MiMa](https://github.com/lightbend/mima)
 + Use lihaoyi's [requests](https://github.com/com-lihaoyi/requests-scala), [ujson](https://github.com/com-lihaoyi/upickle)
 + of course scala, sbt and the transitive dependencies.
 Thanks you all!
@@ -89,6 +91,9 @@ Thanks you all!
 This software is licensed under the [Apache 2 license](http://www.apache.org/licenses/LICENSE-2.0)
 
 Copyright 2021 Sân Đình (https://sandinh.com)
+
+## CHANGES
+see [CHANGELOG.md](CHANGELOG.md)
 
 ## For Sân Đình's projects only (private or oss)
 Use `sd-devops` / `sd-devops-oss` instead of `devops` / `devops-oss`
