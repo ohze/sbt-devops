@@ -8,7 +8,9 @@ def currentBranch: String =
     case Some(ref)       => ref
   }
 
-def pluginSettings(minSbtVersion: String) = Seq(
+val minSbtVersion = "1.5.0"
+
+val pluginSettings = Seq(
   pluginCrossBuild / sbtVersion := minSbtVersion,
   scriptedLaunchOpts ++= Seq(
     "-Xmx1024M",
@@ -30,14 +32,14 @@ lazy val commonDeps = addSbtPlugins(
 lazy val devops = Project("sbt-devops", file("devops"))
   .enablePlugins(SbtPlugin)
   .settings(
-    pluginSettings("1.3.13") ++ commonDeps,
+    pluginSettings ++ commonDeps,
     Compile / unmanagedSourceDirectories += (Compile / scalaSource).value.getParentFile / "nexus",
   )
 
 lazy val devopsOss = Project("sbt-devops-oss", file("devops-oss"))
   .enablePlugins(SbtPlugin)
   .settings(
-    pluginSettings("1.3.13") ++ commonDeps,
+    pluginSettings ++ commonDeps,
     addSbtPlugins(
       "org.xerial.sbt" % "sbt-sonatype" % "3.9.10",
       "com.github.sbt" % "sbt-pgp" % "2.1.2"
@@ -95,7 +97,7 @@ inThisBuild(
 def sandinhPrj(id: String) = Project(id, file("sd"))
   .enablePlugins(SbtPlugin)
   .settings(
-    pluginSettings("1.5.5"),
+    pluginSettings,
     target := target.value / id,
   )
 
@@ -108,7 +110,7 @@ lazy val sdOss = sandinhPrj("sd-devops-oss")
 lazy val `sd-matrix` = project
   .enablePlugins(SbtPlugin)
   .settings(
-    pluginCrossBuild / sbtVersion := "1.5.5",
+    pluginCrossBuild / sbtVersion := minSbtVersion,
     addSbtPlugin("com.eed3si9n" % "sbt-projectmatrix" % "0.8.0"),
   )
 
