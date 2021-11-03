@@ -17,7 +17,7 @@ def gitVer(num: Int): String = {
   // result example: v1.1-1-g1feec7e3
   val process = Process(s"git describe --long --tags --abbrev=8 --match $TagPattern")
   val short = process.!!.trim.stripPrefix(s"v1.1-$num-g")
-  s"1.1-$num-$short"
+  s"1.1+$num-$short"
 }
 
 TaskKey[Unit]("check2") := {
