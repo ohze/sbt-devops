@@ -70,7 +70,7 @@ object DevopsPlugin extends AutoPlugin {
     devopsQA := {
       sdQaBaseTask.value
       qaVersionTask.all(ScopeFilter(inAnyProject)).value
-      versionPolicyCheck.all(ScopeFilter(inAnyProject)).value
+      versionPolicyCheck.?.all(ScopeFilter(inAnyProject)).value
 
       val fmtOk = scalafmtCheck.?.all(inAny).result.value.isSuccess
       val sbtOk = scalafmtSbtCheck.?.all(inAny).result.value.isSuccess
