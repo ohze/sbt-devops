@@ -44,6 +44,7 @@ object Impl extends ImplTrait {
   )
 
   private[devops] val ciReleaseCmds = List(
+    "versionCheck",
     env.getOrElse("CI_CLEAN", "clean"),
     env.getOrElse("CI_RELEASE", "+publish"),
   )

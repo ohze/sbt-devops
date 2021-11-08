@@ -42,6 +42,7 @@ object Impl extends ImplTrait {
   )
 
   private[devops] lazy val ciReleaseCmds = reloadKeyFiles ++ Seq(
+    "versionCheck",
     sys.env.getOrElse("CI_CLEAN", "; clean ; sonatypeBundleClean"),
     sys.env.getOrElse("CI_RELEASE", "+publishSigned"),
     sys.env.getOrElse("CI_SONATYPE_RELEASE", "sonatypeBundleRelease"),
