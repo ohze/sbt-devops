@@ -22,7 +22,6 @@ object SdPlugin extends AutoPlugin {
 
     val skipPublish: Seq[Setting[?]] = Seq(
       publish / skip := true,
-      publishLocal / skip := true,
     )
 
     def addSbtPlugins(modules: ModuleID*): Setting[collection.Seq[ModuleID]] =
