@@ -294,7 +294,7 @@ object DevopsPlugin extends AutoPlugin {
     def check(prefix: String) =
       if (!s.startsWith(prefix)) false
       else {
-        val words = s.substring(prefix.length).split("""[/\s"']""")
+        val words = s.substring(prefix.length).split("""[/\s"';]""")
         words.contains("devopsQA")
       }
     check("- run: sbt ") || check("sbt ")
