@@ -1,3 +1,4 @@
+import com.jsuereth.sbtpgp.PgpKeys.publishSigned
 import sbtdocker.DockerKeys.{dockerBuildAndPush, dockerPush}
 import scala.sys.env
 import scala.sys.process._
@@ -79,6 +80,7 @@ lazy val `devops-notify` = project
     },
     dockerPush := dockerPush.dependsOn(dockerLogin).value,
     publish := dockerBuildAndPush.value,
+    publishSigned := dockerBuildAndPush.value,
   )
 
 inThisBuild(
