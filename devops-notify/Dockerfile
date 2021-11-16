@@ -4,7 +4,6 @@ RUN apk --update add binutils
 
 RUN $JAVA_HOME/bin/jlink \
     --add-modules java.base \
-    --add-modules java.net.http \
     --strip-debug \
     --no-man-pages \
     --no-header-files \
