@@ -1,4 +1,4 @@
-import sbtdocker.DockerKeys.dockerPush
+import sbtdocker.DockerKeys.{dockerBuildAndPush, dockerPush}
 import scala.sys.env
 import scala.sys.process._
 
@@ -60,7 +60,7 @@ def duplicateSbtTest(p: Project) = Seq(
 lazy val `devops-notify` = project
   .enablePlugins(DockerPlugin)
   .settings(
-    skipPublish,
+    versionPolicyCheck / skip := true,
     scalaVersion := scala213,
     libraryDependencies ++= Seq(
       "com.softwaremill.sttp.client3" %% "upickle" % "3.3.16",
@@ -77,7 +77,8 @@ lazy val `devops-notify` = project
       val name = moduleName.value
       tags.map(tag => ImageName(s"ohze/$name:$tag"))
     },
-    dockerPush := dockerPush.dependsOn(dockerLogin).value
+    dockerPush := dockerPush.dependsOn(dockerLogin).value,
+    publish := dockerBuildAndPush.value,
   )
 
 inThisBuild(
