@@ -21,4 +21,4 @@ RUN echo Verifying install ... \
     && echo java --version && java --version \
     && echo Complete.
 
-ENTRYPOINT [ "java", "-jar", "/notify.jar" ]
+ENTRYPOINT [ "java", "-Dhttps.protocols=TLSv1.2", "-jar", "/notify.jar" ]
