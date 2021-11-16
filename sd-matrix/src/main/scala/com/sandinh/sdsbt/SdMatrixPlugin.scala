@@ -5,14 +5,46 @@ import sbt.Keys.*
 import sbt.Def.Initialize
 import sbt.VirtualAxis.jvm
 import sbt.internal.ProjectMatrix
+import sbt.plugins.MiniDependencyTreeKeys.{asString, dependencyTree}
 import sbtprojectmatrix.ProjectMatrixPlugin
+
 import scala.language.implicitConversions
+import scala.util.matching.Regex
 
 object SdMatrixPlugin extends AutoPlugin {
   override def trigger = allRequirements
   override def requires: Plugins = ProjectMatrixPlugin
 
   object autoImport {
+    lazy val checkAkkaVersioning = taskKey[Unit](
+      "https://doc.akka.io/docs/akka/current/common/binary-compatibility-rules.html#mixed-versioning-is-not-allowed"
+    )
+
+    def akkaVersioningSettings(overrides: String*): Seq[Setting[?]] = Seq(
+      dependencyOverrides ++= overrides.map { m =>
+        "com.typesafe.akka" %% m % akkaAxis.value.version
+      },
+      checkAkkaVersioning := {
+        val av = akkaAxis.value.version
+        val sv = Regex.quote(scalaBinaryVersion.value)
+        // ex: "  | +-com.typesafe.akka:akka-actor_2.13:2.6.16 [S]"
+        val LinePattern =
+          raw"[ |+\-]+com\.typesafe\.akka:(.+)_$sv:([0-9.]+)(?: \[S])?".r
+        val inconsistentModules =
+          (Runtime / dependencyTree / asString).value.linesIterator
+            .filter(_.contains("com.typesafe.akka:"))
+            .collect { case LinePattern(module, v) if v != av => module -> v }
+            .toMap
+            .map { case (m, v) => s"$m:$v" }
+        if (inconsistentModules.nonEmpty)
+          throw new MessageOnlyException(
+            s"""Mixed akka versions is not allowed.
+               |Please update dependencyOverrides for the following akka modules to version $av:
+               |${inconsistentModules.mkString("\n")}
+               |""".stripMargin
+          )
+      },
+    )
 
     lazy val configAxis = settingKey[LibAxis]("Current typesafe config LibAxis")
 
