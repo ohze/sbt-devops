@@ -7,7 +7,6 @@ import scala.collection.immutable.Seq
 import scala.sys.env
 import scala.util.control.NonFatal
 import sys.process.*
-import sttp.client3.httpclient.HttpClientSyncBackend
 
 object Notify {
   def main(args: Array[String]): Unit = Notify()
@@ -102,7 +101,7 @@ object Notify {
       value <- env.any(keySuffix)
     } data(field) = value
 
-    val backend = HttpClientSyncBackend()
+    val backend = HttpURLConnectionBackend()
 
     emptyRequest
       .body(data)
