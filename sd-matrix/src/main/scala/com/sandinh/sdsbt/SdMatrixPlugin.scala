@@ -75,7 +75,7 @@ object SdMatrixPlugin extends AutoPlugin {
     val Seq(akka26, akka25) = LibAxis("akka", Seq("2.6.18", "2.5.32"))
 
     val Seq(play28, play27, play26) =
-      LibAxis("play", Seq("2.8.8", "2.7.9", "2.6.25"))
+      LibAxis("play", Seq("2.8.11", "2.7.9", "2.6.25"))
 
     /** Usage example: {{{
       *   libraryDependencies ++= akka("actor", "testkit" -> Test).value
