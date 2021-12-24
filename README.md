@@ -83,7 +83,7 @@ This project use:
 [sbt-sonatype](https://github.com/xerial/sbt-sonatype), [sbt-pgp](https://github.com/sbt/sbt-pgp)
 + Copy some code from [sbt-ci-release](https://github.com/sbt/sbt-ci-release) plugins.
 + [sbt-version-policy](https://github.com/scalacenter/sbt-version-policy) and [MiMa](https://github.com/lightbend/mima)
-+ Use lihaoyi's [requests](https://github.com/com-lihaoyi/requests-scala), [ujson](https://github.com/com-lihaoyi/upickle)
++ Use lihaoyi's [ujson](https://github.com/com-lihaoyi/upickle)
 + of course scala, sbt and the transitive dependencies.
 Thanks you all!
 
