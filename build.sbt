@@ -23,12 +23,20 @@ val pluginSettings = Seq(
   ),
 )
 
+lazy val versionPolicySettings = Seq(
+  // Require for `versionPolicyFindDependencyIssues` because we updated sbt-scalafmt 2.4.3 to 2.4.5
+  libraryDependencySchemes ++= Seq( // TODO remove
+    "org.scalameta" %% "scalafmt-dynamic" % "always", // 2.7.5 to 3.2.1
+    "org.scalameta" % "scalafmt-interfaces" % "always", // 2.7.5 to 3.2.1
+  ),
+)
+
 lazy val commonDeps = addSbtPlugins(
   "org.scalameta" % "sbt-scalafmt" % "2.4.5",
   "com.dwijnand" % "sbt-dynver" % "4.1.1",
   "com.typesafe.sbt" % "sbt-git" % "1.0.2",
   "ch.epfl.scala" % "sbt-version-policy" % "2.0.1",
-)
+) ++ versionPolicySettings
 
 lazy val devops = Project("sbt-devops", file("devops"))
   .enablePlugins(SbtPlugin)
@@ -101,6 +109,7 @@ def sandinhPrj(id: String) = Project(id, file("sd"))
   .enablePlugins(SbtPlugin)
   .settings(
     pluginSettings,
+    versionPolicySettings,
     target := target.value / id,
   )
 
