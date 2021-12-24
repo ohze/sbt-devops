@@ -49,8 +49,8 @@ object SdPlugin extends AutoPlugin {
     def specs2(modules: String*): Initialize[CSeq[ModuleID]] = Def.setting {
       val specs2Version = scalaBinaryVersion.value match {
         case "2.11" => "4.10.6"
-        case "3"    => "5.0.0-RC-11"
-        case _      => "4.12.12"
+        case "3"    => "5.0.0-RC-22"
+        case _      => "4.13.1"
       }
       modules.map { m => "org.specs2" %% s"specs2$m" % specs2Version % Test }
     }
