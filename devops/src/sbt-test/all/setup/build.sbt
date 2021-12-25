@@ -7,7 +7,7 @@ scriptedScalatestSpec := Some(
 
     "devops" should "devopsSetup && !devopsQA" in {
       run(devopsSetup) mustBe Value(())
-      run(devopsQA) mustBe a[Inc]
+      run(devopsQA) mustBe a[Inc] // scalafmtSbtCheck fail
     }
 
     def run[T](taskKey: ScopedKey[Task[T]]): Result[T] =

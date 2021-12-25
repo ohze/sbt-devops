@@ -32,7 +32,7 @@ lazy val versionPolicySettings = Seq(
 )
 
 lazy val commonDeps = addSbtPlugins(
-  "org.scalameta" % "sbt-scalafmt" % "2.4.5",
+  "org.scalameta" % "sbt-scalafmt" % "2.4.6",
   "com.dwijnand" % "sbt-dynver" % "4.1.1",
   "com.typesafe.sbt" % "sbt-git" % "1.0.2",
   "ch.epfl.scala" % "sbt-version-policy" % "2.0.1",
