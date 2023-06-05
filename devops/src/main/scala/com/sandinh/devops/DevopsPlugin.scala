@@ -206,7 +206,7 @@ object DevopsPlugin extends AutoPlugin {
 
     fetch(".scalafmt.conf", "")(_.map {
       case s if s.startsWith("version =") => s"version = $scalafmtVersion"
-      case s => s
+      case s                              => s
     })
 
     fetch("sbt-devops.yml", ".github/workflows")(_.flatMap { line =>
