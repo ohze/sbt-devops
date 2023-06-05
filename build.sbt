@@ -69,7 +69,7 @@ def duplicateSbtTest(p: Project) = Seq(
 lazy val `devops-notify` = project
   .enablePlugins(DockerPlugin)
   .settings(
-    versionPolicyCheck / skip := true,
+    publish / skip := true,
     scalaVersion := scala3,
     libraryDependencies ++= Seq(
       "com.softwaremill.sttp.client3" %% "upickle" % "3.8.15",
@@ -86,8 +86,6 @@ lazy val `devops-notify` = project
       tags.map(tag => ImageName(s"ohze/$name:$tag"))
     },
     dockerPush := dockerPush.dependsOn(dockerLogin).value,
-    publish := dockerBuildAndPush.value,
-    publishSigned := dockerBuildAndPush.value,
   )
 
 inThisBuild(
