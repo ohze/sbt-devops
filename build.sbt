@@ -50,7 +50,7 @@ lazy val devopsOss = Project("sbt-devops-oss", file("devops-oss"))
   .settings(
     pluginSettings ++ commonDeps,
     addSbtPlugins(
-      "org.xerial.sbt" % "sbt-sonatype" % "3.9.10",
+      "org.xerial.sbt" % "sbt-sonatype" % "3.9.21",
       "com.github.sbt" % "sbt-pgp" % "2.1.2"
     ),
     Compile / unmanagedSourceDirectories += (devops / Compile / scalaSource).value,
