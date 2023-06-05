@@ -3,7 +3,7 @@ FROM eclipse-temurin:17-alpine as build
 RUN apk --update add binutils
 
 RUN $JAVA_HOME/bin/jlink \
-    --add-modules java.base,jdk.unsupported \
+    --add-modules java.base,jdk.unsupported,java.net.http \
     --strip-debug \
     --no-man-pages \
     --no-header-files \
