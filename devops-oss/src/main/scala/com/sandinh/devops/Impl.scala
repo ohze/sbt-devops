@@ -1,7 +1,7 @@
 package com.sandinh.devops
 
 import com.jsuereth.sbtpgp.SbtPgp
-import com.typesafe.sbt.GitPlugin
+import com.github.sbt.git.GitPlugin
 
 import scala.collection.immutable.Seq
 import sbt.*

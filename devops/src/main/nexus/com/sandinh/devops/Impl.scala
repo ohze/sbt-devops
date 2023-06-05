@@ -4,7 +4,7 @@ import scala.collection.immutable.Seq
 import scala.sys.env
 import sbt.*
 import sbt.Keys.*
-import com.typesafe.sbt.GitPlugin
+import com.github.sbt.git.GitPlugin
 import sbtdynver.DynVerPlugin
 import DevopsPlugin.autoImport.devopsNexusHost
 
