@@ -67,5 +67,5 @@ jobs:
       - uses: docker://ohze/devops-notify:edge
         env:
           MATTERMOST_WEBHOOK_URL: ${{ secrets.MATTERMOST_WEBHOOK_URL }}
-          MATTERMOST_PRETEXT: '@thanhpv @khanhdb @thanhbv xem nhé'
+          MATTERMOST_PRETEXT: '@thanhpv @thanhbv xem nhé'
           _DEVOPS_NEEDS: ${{ toJSON(needs) }}
