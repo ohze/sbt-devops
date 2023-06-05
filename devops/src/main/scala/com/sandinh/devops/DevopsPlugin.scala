@@ -32,7 +32,7 @@ object DevopsPlugin extends AutoPlugin {
   override def trigger = allRequirements
   override def requires = requiresImpl
 
-  val scalafmtVersion = "3.0.4"
+  val scalafmtVersion = "3.7.4"
 
   object autoImport {
     val devopsSetup = taskKey[Unit]("Setup devops stuff")
