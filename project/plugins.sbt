@@ -14,7 +14,7 @@ addSbtPlugin("com.github.sbt" % "sbt-pgp" % "2.1.2")
 
 addSbtPlugin("se.marcuslonnberg" % "sbt-docker" % "1.10.0")
 
-addSbtPlugin("com.eed3si9n" % "sbt-assembly" % "1.1.0")
+addSbtPlugin("com.eed3si9n" % "sbt-assembly" % "2.1.1")
 
 addSbtPlugin("com.sandinh" % "sbt-scripted-scalatest" % "3.0.3")
 
