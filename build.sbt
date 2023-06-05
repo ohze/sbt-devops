@@ -70,7 +70,7 @@ lazy val `devops-notify` = project
   .enablePlugins(DockerPlugin)
   .settings(
     versionPolicyCheck / skip := true,
-    scalaVersion := scala213,
+    scalaVersion := scala3,
     libraryDependencies ++= Seq(
       "com.softwaremill.sttp.client3" %% "upickle" % "3.8.15",
     ),
