@@ -32,7 +32,7 @@ object SdPlugin extends AutoPlugin {
       }
 
     val scalaColCompat: ModuleID =
-      "org.scala-lang.modules" %% "scala-collection-compat" % "2.6.0"
+      "org.scala-lang.modules" %% "scala-collection-compat" % "2.10.0"
 
     /** We should use {{{
       * libraryDependencies ++= scalatest("-funsuite", "-mustmatchers")
