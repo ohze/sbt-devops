@@ -46,7 +46,7 @@ lazy val prjA = (project in file("."))
           val (a, b) = taskValue(k, scala211).partition(_.startsWith("-Xplugin:"))
           b mustBe expected
           a.size mustBe 1
-          assert(a.head.endsWith("silencer-plugin_2.11.12-1.7.6.jar"))
+          assert(a.head.endsWith("silencer-plugin_2.11.12-1.7.12.jar"))
         }
 
         taskValue(scalacOptions, scala211) mustBe base

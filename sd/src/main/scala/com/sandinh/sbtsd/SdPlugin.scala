@@ -18,7 +18,7 @@ object SdPlugin extends AutoPlugin {
 
   object autoImport {
     val (scala211, scala212, scala213, scala3) =
-      ("2.11.12", "2.12.15", "2.13.7", "3.1.0")
+      ("2.11.12", "2.12.18", "2.13.11", "3.3.0")
 
     val skipPublish: Seq[Setting[?]] = Seq(
       publish / skip := true,
@@ -118,7 +118,7 @@ object SdPlugin extends AutoPlugin {
   }
 
   def silencer(m: String): ModuleID =
-    "com.github.ghik" % s"silencer-$m" % "1.7.6" cross CrossVersion.full
+    "com.github.ghik" % s"silencer-$m" % "1.7.12" cross CrossVersion.full
 
   override def globalSettings: Seq[Setting[?]] = Seq(
     devopsNexusHost := "repo.bennuoc.com",
