@@ -1,7 +1,7 @@
 package com.sandinh.devops
 
 import sttp.client3.*
-import sttp.client3.upickle.*
+import sttp.client3.upicklejson.*
 import java.nio.file.Paths
 import scala.collection.immutable.Seq
 import scala.sys.env
