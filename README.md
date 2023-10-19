@@ -44,7 +44,7 @@ Add to `project/plugins.sbt`
 ```sbt
 addSbtPlugin("com.sandinh" % "sbt-devops" % "<version>")
 ```
-+ For oss projects that will be publish to sonatype oss
++ For oss projects that will be published to sonatype oss
 ```sbt
 addSbtPlugin("com.sandinh" % "sbt-devops-oss" % "<version>")
 ```
@@ -102,3 +102,19 @@ It add some predefined settings for sandinh such as:
 + `scalacOptions`
 + `repo.bennuoc.com`
 + ... see [sbtsd code](sd/src/main/scala/com/sandinh/sbtsd) for more details.
+
+## Contributing
+To manually test `devops-notify`
+```shell
+sbt devops-notify/docker
+docker run --rm -it \
+  -eMATTERMOST_WEBHOOK_URL=https://chat.ohze.net/hooks/i9t3q869mp8gbecjbak4x9bndh \
+  -eMATTERMOST_PRETEXT="hehe" \
+  -e_DEVOPS_NEEDS='{"j1":{"result":"success","outputs":{"info":"info1","commitMsg":"commitMsg"}}}' \
+  -eGITHUB_RUN_ID="123" \
+  -eGITHUB_SERVER_URL=https://github.com \
+  -eGITHUB_REPOSITORY=ohze/sd-devops \
+  -eGITHUB_EVENT_NAME=push \
+  -eGITHUB_SHA=sha111 \
+ohze/devops-notify:edge
+```
