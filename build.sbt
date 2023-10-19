@@ -1,5 +1,4 @@
-import com.jsuereth.sbtpgp.PgpKeys.publishSigned
-import sbtdocker.DockerKeys.{dockerBuildAndPush, dockerPush}
+import sbtdocker.DockerKeys.dockerPush
 import scala.sys.env
 import scala.sys.process._
 
