@@ -1,7 +1,7 @@
 package com.sandinh.devops
 
-import sttp.client3.*
-import sttp.client3.upicklejson.*
+import sttp.client4.*
+import sttp.client4.upicklejson.default.*
 import java.nio.file.Paths
 import scala.collection.immutable.Seq
 import scala.sys.env
@@ -98,7 +98,7 @@ def commitMsg: String = {
     value <- env.any(keySuffix)
   } data(field) = value
 
-  val backend = HttpURLConnectionBackend()
+  val backend = DefaultSyncBackend()
 
   emptyRequest
     .body(data)
