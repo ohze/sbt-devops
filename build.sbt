@@ -8,7 +8,7 @@ def currentBranch: String =
     case Some(ref)       => ref
   }
 
-val minSbtVersion = "1.5.0"
+val minSbtVersion = "1.8.3"
 
 val pluginSettings = Seq(
   pluginCrossBuild / sbtVersion := minSbtVersion,
