@@ -39,7 +39,7 @@ object SdPlugin extends AutoPlugin {
       * }}}
       */
     def scalatest(modules: String*): CSeq[ModuleID] = modules.map { m =>
-      "org.scalatest" %% s"scalatest$m" % "3.2.16" % Test
+      "org.scalatest" %% s"scalatest$m" % "3.2.17" % Test
     }
 
     /** Usage example {{{

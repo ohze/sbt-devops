@@ -17,8 +17,8 @@ val pluginSettings = Seq(
     s"-Ddevops.branch=$currentBranch",
   ),
   scriptedScalatestDependencies ++= Seq(
-    "org.scalatest::scalatest-flatspec:3.2.16",
-    "org.scalatest::scalatest-mustmatchers:3.2.16",
+    "org.scalatest::scalatest-flatspec:3.2.17",
+    "org.scalatest::scalatest-mustmatchers:3.2.17",
   ),
 )
 
