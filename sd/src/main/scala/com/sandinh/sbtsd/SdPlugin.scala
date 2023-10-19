@@ -18,7 +18,7 @@ object SdPlugin extends AutoPlugin {
 
   object autoImport {
     val (scala211, scala212, scala213, scala3) =
-      ("2.11.12", "2.12.18", "2.13.11", "3.3.0")
+      ("2.11.12", "2.12.18", "2.13.12", "3.3.1")
 
     val skipPublish: Seq[Setting[?]] = Seq(
       publish / skip := true,
