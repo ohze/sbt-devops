@@ -71,7 +71,7 @@ lazy val `devops-notify` = project
     publish / skip := true,
     scalaVersion := scala3,
     libraryDependencies ++= Seq(
-      "com.softwaremill.sttp.client3" %% "upickle" % "3.8.15",
+      "com.softwaremill.sttp.client3" %% "upickle" % "3.9.0",
     ),
     assembly / mainClass := Some("com.sandinh.devops.Notify"),
     assembly / assemblyOutputPath := target.value / "notify.jar",
