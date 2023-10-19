@@ -23,10 +23,10 @@ val pluginSettings = Seq(
 )
 
 lazy val versionPolicySettings = Seq(
-  // Require for `versionPolicyFindDependencyIssues` because we updated sbt-scalafmt 2.4.3 to 2.4.5
+  // Require for `versionPolicyFindDependencyIssues` because we updated sbt-scalafmt 2.5.2
   libraryDependencySchemes ++= Seq( // TODO remove
-    "org.scalameta" %% "scalafmt-dynamic" % "always", // 2.7.5 to 3.2.1
-    "org.scalameta" % "scalafmt-interfaces" % "always", // 2.7.5 to 3.2.1
+    "org.scalameta" %% "scalafmt-dynamic" % "always", // 3.5.9 to 3.7.13
+    "org.scalameta" %% "scalafmt-sysops" % "always", // 3.5.9 to 3.7.13
   ),
 )
 
