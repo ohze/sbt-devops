@@ -81,16 +81,19 @@ object SdMatrixPlugin extends AutoPlugin {
       *   libraryDependencies ++= akka("actor", "testkit" -> Test).value
       *   // same as:
       *   libraryDependencies ++= Seq(
-      *     "com.typesafe.akka" %% "akka-actor" % akkaAxis.value.version cross CrossVersion.for3Use2_13,
-      *     "com.typesafe.akka" %% "akka-testkit" % akkaAxis.value.version % Test cross CrossVersion.for3Use2_13,
+      *     "com.typesafe.akka" %% "akka-actor" % akkaAxis.value.version,
+      *     "com.typesafe.akka" %% "akka-testkit" % akkaAxis.value.version % Test,
       *   )
+      *   Note: with akka < 2.7.0 we use `cross CrossVersion.for3Use2_13`
       * }}}
       */
     def akka(modules: NameAnConfig*): Initialize[Seq[ModuleID]] = akkaAxis {
       a =>
         modules.map { case NameAnConfig(m, c) =>
-          // TODO remove `for3Use2_13` when this issue is fixed: https://github.com/akka/akka/issues/30243
-          "com.typesafe.akka" %% s"akka-$m" % a.version withConfigurations c cross CrossVersion.for3Use2_13
+          val id =
+            "com.typesafe.akka" %% s"akka-$m" % a.version withConfigurations c
+          if (a.version >= "2.7.0") id
+          else id cross CrossVersion.for3Use2_13
         }
     }
 
